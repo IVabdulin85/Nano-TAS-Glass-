@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NTG · Nano Tas Glass — Investment Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#080d1a;--bg2:#0d1525;--surface:#111c30;--surface2:#172036;--surface3:#1e2b42;
+  --border:#1f3050;--border2:#2a3f5f;
+  --gold:#e8a020;--gold-dim:rgba(232,160,32,.15);--gold-glow:rgba(232,160,32,.08);
+  --teal:#0fbcaf;--blue:#3b82f6;--red:#ef4444;--green:#22c55e;--amber:#f59e0b;
+  --text:#dce8f5;--text2:#7a9cc0;--text3:#4a6880;
+  font-family:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:10px 24px;display:flex;align-items:center;justify-content:space-between;
+}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-logo{
+  width:38px;height:38px;background:var(--gold);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--bg);font-size:11px;letter-spacing:-.5px;
+}
+.hdr-title{font-size:15px;font-weight:700;color:var(--text)}
+.hdr-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.hdr-badges{display:flex;gap:8px;align-items:center}
+.badge{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text2);padding:3px 10px;border-radius:20px;
+  font-size:10px;font-family:'IBM Plex Mono',monospace;
+}
+.badge.gold{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.badge.amber{background:rgba(245,158,11,.12);border-color:var(--amber);color:var(--amber)}
+
+/* TABS */
+nav{
+  position:sticky;top:59px;z-index:99;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;padding:0 24px;
+}
+.tab-btn{
+  padding:11px 18px;font-size:13px;font-weight:600;color:var(--text2);
+  border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .18s;white-space:nowrap;
+}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-btn:hover:not(.active){color:var(--text)}
+
+/* LAYOUT */
+.tab-pane{display:none;padding:24px;max-width:1440px;margin:0 auto}
+.tab-pane.active{display:block}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:800px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;transition:border-color .25s,background .25s;
+}
+.kpi.pos{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.04)}
+.kpi.neg{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.04)}
+.kpi-label{font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.kpi-val{font-size:24px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--gold);line-height:1}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.kpi.pos .kpi-val{color:var(--green)}
+.kpi.neg .kpi-val{color:var(--red)}
+
+/* FM LAYOUT */
+.fm-layout{display:grid;grid-template-columns:284px 1fr;gap:16px;align-items:start}
+@media(max-width:980px){.fm-layout{grid-template-columns:1fr}}
+
+/* CONTROL PANEL */
+.ctrl-panel{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:18px;position:sticky;top:108px;
+}
+.ctrl-section{margin-bottom:18px}
+.ctrl-section:last-child{margin-bottom:0}
+.ctrl-label{
+  font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.ctrl-label span{color:var(--gold);font-size:12px;font-weight:700}
+
+/* Button groups */
+.btn-grp{display:flex;gap:4px}
+.btn-grp button{
+  flex:1;padding:7px 4px;font-size:12px;font-weight:600;border-radius:6px;
+  border:1px solid var(--border2);background:var(--surface2);color:var(--text2);
+  cursor:pointer;transition:all .15s;font-family:'IBM Plex Sans',sans-serif;
+}
+.btn-grp button.active{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.btn-grp button:hover:not(.active){color:var(--text);border-color:var(--text2)}
+
+/* Slider */
+input[type=range]{
+  width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;
+  outline:none;cursor:pointer;margin-top:6px;
+  background:linear-gradient(to right,var(--gold) var(--pct,0%),var(--border2) var(--pct,0%));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--gold);border:2px solid var(--bg);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:15px;height:15px;border-radius:50%;background:var(--gold);
+  border:2px solid var(--bg);cursor:pointer;
+}
+.slider-range{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:3px;font-family:'IBM Plex Mono',monospace}
+
+/* Toggle */
+.toggle-row{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:9px 0;border-top:1px solid var(--border);
+}
+.toggle-text{flex:1}
+.toggle-text strong{font-size:12px;color:var(--text);display:block}
+.toggle-text small{font-size:10px;color:var(--text3)}
+.tgl{position:relative;width:36px;height:20px;flex-shrink:0}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.tgl-track{
+  position:absolute;inset:0;background:var(--border2);border-radius:20px;
+  cursor:pointer;transition:background .2s;
+}
+.tgl-track:after{
+  content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;
+  border-radius:50%;background:#fff;transition:transform .2s;
+}
+.tgl input:checked+.tgl-track{background:var(--gold)}
+.tgl input:checked+.tgl-track:after{transform:translateX(16px)}
+
+/* CAPEX table */
+.capex-tbl{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:6px}
+.capex-tbl tr{border-bottom:1px solid var(--border)}
+.capex-tbl td{padding:4px 0;color:var(--text2);font-family:'IBM Plex Mono',monospace;vertical-align:middle}
+.capex-tbl td:last-child{text-align:right;color:var(--text)}
+.capex-tbl .tr-total td{color:var(--gold);font-weight:700;border-top:2px solid var(--border2);padding-top:6px}
+.capex-tbl .tr-extra td{color:var(--amber)}
+.capex-tbl .tr-wc td{color:var(--text3);font-style:italic}
+
+/* NOT INCLUDED */
+.not-incl{
+  background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.18);
+  border-radius:8px;padding:10px;margin-top:12px;
+}
+.not-incl-hd{font-size:9px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.not-incl li{font-size:10px;color:var(--text3);list-style:none;padding:1px 0}
+.not-incl li::before{content:'✗ ';color:var(--red)}
+
+/* MODEL PANEL */
+.model-panel{display:flex;flex-direction:column;gap:14px}
+.chart-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;
+}
+.chart-box h4{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.charts-row{display:grid;grid-template-columns:55% 45%;gap:14px}
+@media(max-width:900px){.charts-row{grid-template-columns:1fr}}
+.ch-tall{height:256px;position:relative}
+.ch-med{height:220px;position:relative}
+.ch-donut{height:220px;position:relative;max-width:280px;margin:0 auto}
+.maint-note{font-size:9px;color:var(--amber);margin-top:5px;font-family:'IBM Plex Mono',monospace}
+
+/* SENSITIVITY TABLE */
+.sens-wrap{overflow-x:auto}
+.sens-tbl{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap}
+.sens-tbl th{padding:8px 10px;text-align:right;font-size:9px;color:var(--text3);border-bottom:2px solid var(--border2);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.sens-tbl th:first-child{text-align:left}
+.sens-tbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);color:var(--text2)}
+.sens-tbl td:first-child{text-align:left;color:var(--text);font-weight:600}
+.sens-tbl tr.s-active{outline:2px solid var(--gold);outline-offset:-1px;background:var(--gold-glow)}
+.npv-a{background:rgba(34,197,94,.28);color:#86efac}
+.npv-b{background:rgba(34,197,94,.12);color:#a0e8b8}
+.npv-z{background:rgba(232,160,32,.18);color:#e8a020}
+.npv-d{background:rgba(239,68,68,.12);color:#fca5a5}
+.npv-f{background:rgba(239,68,68,.28);color:#ef4444}
+
+/* ============ STRATEGY TAB ============ */
+.facts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:768px){.facts-grid{grid-template-columns:1fr 1fr}}
+.fact-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:16px;text-align:center;
+}
+.fact-num{font-size:26px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--gold);margin-bottom:3px}
+.fact-lbl{font-size:11px;color:var(--text2)}
+.sec-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}}
+
+.assume-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.assume-tbl th{padding:7px 10px;text-align:left;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border2);background:var(--surface2)}
+.assume-tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.assume-tbl td:nth-child(2){color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.assume-tbl td:nth-child(3){font-size:10px;color:var(--text3)}
+
+.timeline-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:768px){.timeline-wrap{grid-template-columns:1fr}}
+.tl-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.tl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tl-title{font-size:12px;font-weight:700;color:var(--text)}
+.tl-badge{font-size:10px;padding:2px 8px;border-radius:12px;font-family:'IBM Plex Mono',monospace;font-weight:700}
+.tl-badge.fast{background:rgba(34,197,94,.15);color:var(--green)}
+.tl-badge.real{background:rgba(245,158,11,.15);color:var(--amber)}
+.tl-step{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+.tl-num{width:20px;height:20px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold);color:var(--gold);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'IBM Plex Mono',monospace;margin-top:1px}
+.tl-info{flex:1}
+.tl-info strong{font-size:11px;color:var(--text);display:block}
+.tl-info span{font-size:10px;color:var(--text3)}
+
+/* ============ MARKET TAB ============ */
+.price-cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:768px){.price-cmp{grid-template-columns:1fr}}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center}
+.pc-flag{font-size:28px;margin-bottom:8px}
+.pc-country{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.pc-range{font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--gold)}
+.pc-unit{font-size:10px;color:var(--text3);margin-top:2px}
+.pc-note{font-size:10px;color:var(--text3);margin-top:6px;border-top:1px solid var(--border);padding-top:6px}
+
+.cmp-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:24px}
+.cmp-tbl th{padding:10px 12px;text-align:center;font-size:10px;font-weight:700;border-bottom:2px solid var(--border2);background:var(--surface2);color:var(--text2);letter-spacing:.03em}
+.cmp-tbl th.our{background:var(--gold-dim);color:var(--gold)}
+.cmp-tbl th:first-child{text-align:left}
+.cmp-tbl td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2)}
+.cmp-tbl td:first-child{text-align:left;color:var(--text3);font-family:'IBM Plex Sans',sans-serif}
+.cmp-tbl td.our{background:var(--gold-glow);color:var(--gold);font-weight:700}
+.g{color:var(--green)!important}.w{color:var(--amber)!important}.b{color:var(--red)!important}
+
+.bom-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.bom-tbl th{padding:8px 12px;text-align:center;font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;border-bottom:1px solid var(--border2);font-family:'IBM Plex Mono',monospace}
+.bom-tbl th:first-child{text-align:left}
+.bom-tbl td{padding:8px 12px;text-align:center;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2)}
+.bom-tbl td:first-child{text-align:left;color:var(--text)}
+.bom-tbl .base{background:var(--gold-glow)}
+.bom-tbl .base td{color:var(--gold)}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--border);padding:14px 24px;margin-top:40px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+}
+.ft-left{font-size:10px;color:var(--text3);max-width:600px;line-height:1.5}
+.ft-right{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;text-align:right}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-brand">
+    <div class="hdr-logo">NTG</div>
+    <div>
+      <div class="hdr-title">Nano Tas Glass — Нанокристаллический стеклокомпозит</div>
+      <div class="hdr-sub">Завод · г. Кунаев · Казахстан · Pre-Feasibility апрель 2026</div>
+    </div>
+  </div>
+  <div class="hdr-badges">
+    <span class="badge amber">±20–25% точность</span>
+    <span class="badge gold">Rev.1</span>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav>
+  <button class="tab-btn active" onclick="showTab('t1',this)">📋 ТЭО / Стратегия</button>
+  <button class="tab-btn" onclick="showTab('t2',this)">🏗️ Рынок и Продукт</button>
+  <button class="tab-btn" onclick="showTab('t3',this)" id="t3btn">📊 Финансовая Модель</button>
+</nav>
+
+<!-- ===================== TAB 1: STRATEGY ===================== -->
+<div id="t1" class="tab-pane active">
+
+  <div class="facts-grid">
+    <div class="fact-card">
+      <div class="fact-num">1 200</div>
+      <div class="fact-lbl">м²/сутки · базовая мощность</div>
+    </div>
+    <div class="fact-card">
+      <div class="fact-num">$32.4M</div>
+      <div class="fact-lbl">CAPEX (±20–25%)</div>
+    </div>
+    <div class="fact-card">
+      <div class="fact-num">$3.0M</div>
+      <div class="fact-lbl">Оборотный капитал (3 мес.)</div>
+    </div>
+    <div class="fact-card">
+      <div class="fact-num">191+</div>
+      <div class="fact-lbl">рабочих мест</div>
+    </div>
+    <div class="fact-card">
+      <div class="fact-num">~85%</div>
+      <div class="fact-lbl">локальное сырьё</div>
+    </div>
+    <div class="fact-card">
+      <div class="fact-num">50+ лет</div>
+      <div class="fact-lbl">срок службы материала</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-box">
+      <div class="sec-title">Ключевые допущения</div>
+      <table class="assume-tbl">
+        <thead><tr><th>Параметр</th><th>Значение</th><th>Источник</th></tr></thead>
+        <tbody>
+          <tr><td>Курс USD/KZT</td><td>480 тнг</td><td>НБК апрель 2026</td></tr>
+          <tr><td>Курс CNY/KZT</td><td>70 тнг</td><td>НБК апрель 2026</td></tr>
+          <tr><td>НДС</td><td>12% (включён)</td><td>НК РК 2026</td></tr>
+          <tr><td>КПН</td><td>20% / 0% СЭЗ</td><td>НК РК</td></tr>
+          <tr><td>Электроэнергия</td><td>$0.045/кВт·ч</td><td>Тариф Кунаев</td></tr>
+          <tr><td>Природный газ</td><td>$0.06/м³</td><td>Тариф Кунаев</td></tr>
+          <tr><td>Режим работы</td><td>24/7 · 365 дней</td><td>Непрерывный цикл</td></tr>
+          <tr><td>Кап. ремонт</td><td>1 мес. каждые 5 лет</td><td>Норма отрасли</td></tr>
+          <tr><td>Технол. партнёр</td><td>Китай, 4 завода с 2008</td><td>Полный тех. пакет</td></tr>
+          <tr><td>Точность оценки</td><td>±20–25%</td><td>Предпроектная стадия</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-box">
+      <div class="sec-title">Что НЕ включено в CAPEX</div>
+      <div style="color:var(--text3);font-size:11px;margin-bottom:10px">Следующие позиции требуют отдельной оценки и должны быть учтены при финальном инвестиционном решении:</div>
+      <table class="assume-tbl">
+        <thead><tr><th>Позиция</th><th>Ориентир</th><th>Статус</th></tr></thead>
+        <tbody>
+          <tr><td>Ж/д подъездная ветка</td><td>Отдельно</td><td style="color:var(--red)">Не включено</td></tr>
+          <tr><td>Внешние сети за забором</td><td>По ТУ</td><td style="color:var(--red)">Не включено</td></tr>
+          <tr><td>Доставка обор. до Кунаева</td><td>~$0.5–1M</td><td style="color:var(--red)">Не включено</td></tr>
+          <tr><td>Краны и погрузчики (~10 ед.)</td><td>~$200–400K</td><td style="color:var(--red)">Не включено</td></tr>
+          <tr><td>Оборотный капитал</td><td>$3.0M</td><td style="color:var(--amber)">Учтён отдельно</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:10px;padding:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:6px;font-size:10px;color:var(--amber)">
+        ⚠ Потенциальный дополнительный CAPEX: <strong>$0.7–1.4M</strong> (доставка + краны)
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:16px">
+    <div class="sec-title">Сроки реализации</div>
+    <div class="timeline-wrap">
+      <div class="tl-card">
+        <div class="tl-head">
+          <div class="tl-title">Оптимистичный путь</div>
+          <div class="tl-badge fast">~22 месяца</div>
+        </div>
+        <div class="tl-step"><div class="tl-num">1</div><div class="tl-info"><strong>Фаза 1 · 0–6 мес.</strong><span>Проектирование, адаптация КИТ→КЗ, тендер ГП</span></div></div>
+        <div class="tl-step"><div class="tl-num">2</div><div class="tl-info"><strong>Фаза 2 · 6–12 мес.</strong><span>Заказ оборудования (Китай, 6 мес.), фундаменты</span></div></div>
+        <div class="tl-step"><div class="tl-num">3</div><div class="tl-info"><strong>Фаза 3 · 12–22 мес.</strong><span>Строительство, монтаж, ПНР, опытная эксплуатация</span></div></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px">⚡ Без регуляторных барьеров · ЮЛ зарегистрировано · земля оформлена</div>
+      </div>
+      <div class="tl-card">
+        <div class="tl-head">
+          <div class="tl-title">Реалистичный путь (ОПО II кл.)</div>
+          <div class="tl-badge real">~36–42 месяца</div>
+        </div>
+        <div class="tl-step"><div class="tl-num">!</div><div class="tl-info"><strong>ТУ Электрики + Газа · 3–6 мес.</strong><span>Основной регуляторный барьер</span></div></div>
+        <div class="tl-step"><div class="tl-num">!</div><div class="tl-info"><strong>Госэкспертиза · 4–7 мес.</strong><span>Критический путь</span></div></div>
+        <div class="tl-step"><div class="tl-num">!</div><div class="tl-info"><strong>Декл. ПБ · КЭР · ПЛАРН · Рег. ОПО</strong><span>Объект опасного производства II класса</span></div></div>
+        <div style="font-size:10px;color:var(--amber);margin-top:8px">⚡ Как ускорить: СЭЗ с готовой инфраструктурой (−6–12 мес.) · EPC-подрядчик</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB 2: MARKET ===================== -->
+<div id="t2" class="tab-pane">
+
+  <div class="price-cmp">
+    <div class="price-card">
+      <div class="pc-flag">🇰🇿</div>
+      <div class="pc-country">Казахстан</div>
+      <div class="pc-range">$63–173</div>
+      <div class="pc-unit">USD / м² (NTG)</div>
+      <div class="pc-note">Базовая модель: $63/м² (консервативно)</div>
+    </div>
+    <div class="price-card">
+      <div class="pc-flag">🇨🇳</div>
+      <div class="pc-country">Китай (импорт)</div>
+      <div class="pc-range">$50–80</div>
+      <div class="pc-unit">USD / м² + доставка 30–90 дней</div>
+      <div class="pc-note">Конкурент по цене, но логистика проигрывает</div>
+    </div>
+    <div class="price-card">
+      <div class="pc-flag">🇮🇹</div>
+      <div class="pc-country">Италия (премиум)</div>
+      <div class="pc-range">$170–430</div>
+      <div class="pc-unit">USD / м² (аналоги)</div>
+      <div class="pc-note">Качественный ориентир — потолок цены</div>
+    </div>
+  </div>
+
+  <div class="chart-box" style="margin-bottom:20px">
+    <div class="sec-title">Технические характеристики: NTG vs Конкуренты</div>
+    <div style="overflow-x:auto">
+    <table class="cmp-tbl">
+      <thead>
+        <tr>
+          <th style="text-align:left">Параметр</th>
+          <th class="our">NTG (наш)</th>
+          <th>Керамогранит</th>
+          <th>Натур. камень</th>
+          <th>Лаймстоун</th>
+          <th>Мрамор</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Твёрдость (Моос)</td>
+          <td class="our g">6.5–7</td>
+          <td>5–6</td>
+          <td>3–7</td>
+          <td class="b">3–4</td>
+          <td class="b">3–4</td>
+        </tr>
+        <tr>
+          <td>Водопоглощение</td>
+          <td class="our g">&lt;0.01%</td>
+          <td>0.1–0.5%</td>
+          <td>0.2–2%</td>
+          <td class="b">5–15%</td>
+          <td>0.3–1%</td>
+        </tr>
+        <tr>
+          <td>Морозостойкость</td>
+          <td class="our g">F300+</td>
+          <td class="w">F75–100</td>
+          <td class="w">F50–100</td>
+          <td class="b">F25–50</td>
+          <td class="b">F25–50</td>
+        </tr>
+        <tr>
+          <td>Огнестойкость</td>
+          <td class="our g">Класс А1 НГ</td>
+          <td class="g">Класс А1</td>
+          <td class="g">Класс А1</td>
+          <td class="g">Класс А1</td>
+          <td class="g">Класс А1</td>
+        </tr>
+        <tr>
+          <td>Сейсмостойкость</td>
+          <td class="our g">✅ Прочный</td>
+          <td class="w">⚠️ Хрупкий</td>
+          <td class="b">❌ Тяжёлый</td>
+          <td class="b">❌ Тяжёлый</td>
+          <td class="b">❌ Тяжёлый</td>
+        </tr>
+        <tr>
+          <td>Толщина форматов</td>
+          <td class="our">12–35 мм</td>
+          <td>3–12 мм</td>
+          <td>20–50 мм</td>
+          <td>20–50 мм</td>
+          <td>20–50 мм</td>
+        </tr>
+        <tr>
+          <td>Срок службы</td>
+          <td class="our g">50+ лет</td>
+          <td>30–40 лет</td>
+          <td>30–50 лет</td>
+          <td class="w">20–30 лет</td>
+          <td class="w">20–30 лет</td>
+        </tr>
+        <tr>
+          <td>МЧС-нормы РК 2025</td>
+          <td class="our g">✅ Полностью</td>
+          <td class="g">✅ Да</td>
+          <td class="g">✅ Да</td>
+          <td class="g">✅ Да</td>
+          <td class="g">✅ Да</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <div class="sec-title">Размерная линейка BOM · базовый формат 18 мм</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Каждая толщина даёт разный выход м² с тонны сырья и себестоимость сырья на м². Базовый сценарий финансовой модели: <strong style="color:var(--gold)">18 мм</strong></div>
+    <table class="bom-tbl">
+      <thead>
+        <tr>
+          <th style="text-align:left">Толщина</th>
+          <th>Выход м²/тонну</th>
+          <th>Стоимость сырья</th>
+          <th>Объём плиты м³/м²</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>8 мм</td><td>36.81</td><td>$6.09/м²</td><td>0.008</td><td><span style="color:var(--text3)">Тонкий формат</span></td></tr>
+        <tr><td>10 мм</td><td>29.44</td><td>$7.61/м²</td><td>0.010</td><td><span style="color:var(--text3)">Стандарт интерьер</span></td></tr>
+        <tr><td>12 мм</td><td>24.54</td><td>$9.13/м²</td><td>0.012</td><td><span style="color:var(--text3)">Интерьер / фасад</span></td></tr>
+        <tr><td>15 мм</td><td>19.63</td><td>$11.41/м²</td><td>0.015</td><td><span style="color:var(--text3)">Фасад лёгкий</span></td></tr>
+        <tr class="base"><td>18 мм ⭐</td><td>16.36</td><td>$13.70/м²</td><td>0.018</td><td><span style="color:var(--gold);font-weight:700">БАЗА МОДЕЛИ</span></td></tr>
+        <tr><td>20 мм</td><td>14.72</td><td>$15.22/м²</td><td>0.020</td><td><span style="color:var(--text3)">Тяжёлый фасад</span></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;font-size:10px;color:var(--text3)">Плотность смеси ~2785 кг/м³ · Коэффициент сырьё→продукт: 0.82 (потери при плавлении) · Форматы: 3000×1600 мм и 2800×1600 мм</div>
+  </div>
+
+</div>
+
+<!-- ===================== TAB 3: FINANCIAL MODEL ===================== -->
+<div id="t3" class="tab-pane">
+  <div class="fm-layout">
+
+    <!-- LEFT: CONTROLS -->
+    <div class="ctrl-panel">
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Мощность завода</div>
+        <div class="btn-grp">
+          <button class="active" onclick="setCAP(1200,this)">1 200 м²/д</button>
+          <button onclick="setCAP(1700,this)">1 700 м²/д</button>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:5px;font-family:'IBM Plex Mono',monospace" id="cap-note">438 000 м²/год · $32.4M CAPEX</div>
+      </div>
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Цена продажи <span id="price-display">$63/м²</span></div>
+        <input type="range" id="price-slider" min="50" max="173" value="63"
+          oninput="setPRICE(+this.value)" style="--pct:9.6%">
+        <div class="slider-range"><span>$50</span><span>Китай</span><span>KZ рынок</span><span>$173</span></div>
+      </div>
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Горизонт расчёта</div>
+        <div class="btn-grp">
+          <button class="active" onclick="setHOR(5,this)">5 лет</button>
+          <button onclick="setHOR(10,this)">10 лет</button>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:5px;font-family:'IBM Plex Mono',monospace">10 лет: Год 6 = 11/12 мощности (кап. ремонт)</div>
+      </div>
+
+      <label class="toggle-row" onclick="toggleSEZ()">
+        <div class="tgl"><input type="checkbox" id="sez-cb"><span class="tgl-track"></span></div>
+        <div class="toggle-text">
+          <strong>🏭 СЭЗ — КПН 0%</strong>
+          <small>Если участок в СЭЗ. Иначе: КПН 20%</small>
+        </div>
+      </label>
+
+      <!-- CAPEX BREAKDOWN -->
+      <div class="ctrl-section" style="margin-top:14px">
+        <div class="ctrl-label" style="margin-bottom:6px">Структура CAPEX</div>
+        <table class="capex-tbl" id="capex-tbl">
+          <tr><td>Земля и площадка</td><td>$0.44M</td></tr>
+          <tr><td>Здание + строй.</td><td>$11.76M</td></tr>
+          <tr><td>Оборудование (Китай)</td><td>$11.77M</td></tr>
+          <tr><td>Команда проекта</td><td>$2.17M</td></tr>
+          <tr><td>Колёсная техника</td><td>$0.39M</td></tr>
+          <tr><td>Разрешения</td><td>$0.50M</td></tr>
+          <tr><td>Contingency 20%</td><td>$5.41M</td></tr>
+          <tr id="extra-row" style="display:none" class="tr-extra"><td>+Доп. оборудование</td><td>+$6.00M</td></tr>
+          <tr class="tr-total"><td>ИТОГО</td><td id="capex-total">$32.44M</td></tr>
+          <tr class="tr-wc"><td>+ Обор. капитал</td><td id="wc-display">$3.00M</td></tr>
+        </table>
+        <div class="not-incl">
+          <div class="not-incl-hd">Не включено в CAPEX</div>
+          <ul>
+            <li>Ж/д ветка (отдельный подряд)</li>
+            <li>Внешние сети за забором (по ТУ)</li>
+            <li>Доставка в Кунаев (~$0.5–1M)</li>
+            <li>Краны и погрузчики (~$200–400K)</li>
+          </ul>
+        </div>
+      </div>
+
+    </div><!-- END CTRL PANEL -->
+
+    <!-- RIGHT: KPI + CHARTS -->
+    <div class="model-panel">
+
+      <!-- KPI CARDS -->
+      <div class="kpi-grid">
+        <div class="kpi" id="kpi-npv">
+          <div class="kpi-label">NPV (дисконт. @14%)</div>
+          <div class="kpi-val" id="kv-npv">—</div>
+          <div class="kpi-sub" id="ks-npv">горизонт 5 лет</div>
+        </div>
+        <div class="kpi" id="kpi-irr">
+          <div class="kpi-label">IRR</div>
+          <div class="kpi-val" id="kv-irr">—</div>
+          <div class="kpi-sub">vs WACC 14%</div>
+        </div>
+        <div class="kpi" id="kpi-dpb">
+          <div class="kpi-label">Дисконт. окупаемость</div>
+          <div class="kpi-val" id="kv-dpb">—</div>
+          <div class="kpi-sub" id="ks-dpb">лет от Года 0</div>
+        </div>
+        <div class="kpi" id="kpi-ebi">
+          <div class="kpi-label">EBITDA Год 1</div>
+          <div class="kpi-val" id="kv-ebi">—</div>
+          <div class="kpi-sub" id="ks-ebi">маржа —%</div>
+        </div>
+      </div>
+
+      <!-- P&L CHART (full width) -->
+      <div class="chart-box">
+        <h4>P&amp;L — Выручка / EBITDA / Чистая прибыль по годам</h4>
+        <div class="ch-tall"><canvas id="plChart"></canvas></div>
+        <div class="maint-note" id="maint-note" style="display:none">* Год 6 — плановый капитальный ремонт (11 месяцев работы)</div>
+      </div>
+
+      <!-- FCF + DONUT -->
+      <div class="charts-row">
+        <div class="chart-box">
+          <h4>Кумулятивный дисконтированный FCF</h4>
+          <div class="ch-med"><canvas id="fcfChart"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h4>Структура OPEX</h4>
+          <div class="ch-donut"><canvas id="donutChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- SENSITIVITY TABLE -->
+      <div class="chart-box">
+        <h4>Анализ чувствительности — цена продажи vs показатели</h4>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:10px">При текущих настройках мощности, горизонта и режима СЭЗ. Выделена текущая цена.</div>
+        <div class="sens-wrap">
+          <table class="sens-tbl" id="sens-tbl">
+            <thead>
+              <tr>
+                <th style="text-align:left">Цена /м²</th>
+                <th>Выручка Г1</th>
+                <th>Чист. приб Г1</th>
+                <th id="sens-hd-rev">Выручка Г5</th>
+                <th id="sens-hd-ni">Чист. приб Г5</th>
+                <th>NPV</th>
+                <th>IRR</th>
+              </tr>
+            </thead>
+            <tbody id="sens-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- END MODEL PANEL -->
+  </div>
+</div>
+
+<footer>
+  <div class="ft-left">
+    Настоящий дашборд создан в целях инвестиционного анализа на стадии предпроектной проработки (точность ±20–25%). Все расчёты носят ориентировочный характер и не являются инвестиционной рекомендацией или гарантией доходности. Итоговые показатели зависят от фактической стоимости строительства, рыночной конъюнктуры и регуляторной среды.
+  </div>
+  <div class="ft-right">
+    NTG · Nano Tas Glass · г. Кунаев · Казахстан<br>
+    Pre-Feasibility Rev.1 · Апрель 2026
+  </div>
+</footer>
+
+<script>
+// ============================================================
+//  MODEL CONSTANTS (from Excel claude_for_dashboard.xlsx)
+// ============================================================
+const M = {
+  // Production
+  cap:    { 1200: 438000, 1700: 620500 }, // m²/year
+
+  // CAPEX ($)
+  capex:  { 1200: 32437871.44, 1700: 38437871.44 },
+
+  // Working capital ($)
+  wc:     { 1200: 2999437, 1700: 4249101 },
+
+  // Variable OPEX per m² (scales with production)
+  // = (raw_mat + elec + gas + water + logistics) / 438000
+  // = 8349407 / 438000
+  varM2:  19.0626,
+
+  // Fixed OPEX (does NOT scale): personnel + admin + other
+  fixBase: 3511592,
+
+  // Model params
+  WACC:   0.14,
+  TAX:    0.20,
+  INFL:   0.07,
+  DEPR:   25,     // straight-line life, years
+  MAINT:  0.05,   // maintenance = 5% of CAPEX / year
+
+  // OPEX donut component rates ($/m² for variable, absolute for fixed)
+  rawM2:   13.6964,  // raw materials per m²
+  gasM2:    2.0690,  // gas per m²
+  elecM2:   1.1470,  // electricity per m²
+  logM2:    2.1000,  // logistics per m²
+  waterM2:  0.0497,  // water per m²
+  // Fixed: personnel=1761592, admin=750000, other=1000000
+
+  // Prices for sensitivity
+  PRICES:  [50, 63, 80, 100, 115, 130, 150, 173],
+};
+
+// ============================================================
+//  STATE
+// ============================================================
+const S = { cap: 1200, price: 63, horizon: 5, sez: false };
+
+// ============================================================
+//  CORE FINANCIAL MODEL
+// ============================================================
+function computeModel(cap, price0, horizon, sez) {
+  const prod    = M.cap[cap];
+  const capex   = M.capex[cap];
+  const wc      = M.wc[cap];
+  const depr    = capex / M.DEPR;
+  const maint   = capex * M.MAINT;
+  const fixOpex = M.fixBase + maint;
+  const varOpex = M.varM2 * prod;
+  const annOpex = fixOpex + varOpex;
+  const tax     = sez ? 0 : M.TAX;
+
+  const cfs  = [-(capex + wc)];
+  const rows = [];
+
+  for (let y = 1; y <= horizon; y++) {
+    const isMaint = (horizon === 10 && y === 6);
+    const p       = isMaint ? prod * (11/12) : prod;
+    const opex_y  = isMaint ? (M.varM2 * p + fixOpex) : annOpex;
+    const price   = price0 * (1 + M.INFL) ** (y - 1);
+    const rev     = p * price;
+    const ebitda  = rev - opex_y;
+    const ebit    = ebitda - depr;
+    const taxes   = ebit > 0 ? ebit * tax : 0;
+    const ni      = ebit - taxes;
+    const fcf0    = ni + depr;
+    const fcf     = y === horizon ? fcf0 + wc : fcf0;
+
+    rows.push({ y, rev, ebitda, ebit, ni, fcf, price, isMaint });
+    cfs.push(fcf);
+  }
+
+  // NPV
+  const npv = cfs.reduce((s, cf, i) => s + cf / (1 + M.WACC) ** i, 0);
+
+  // IRR (bisection, 200 iterations)
+  const irrFn = r => cfs.reduce((s, cf, i) => s + cf / (1 + r) ** i, 0);
+  let irr = null;
+  if (irrFn(0.001) > 0) {
+    let lo = 0.001, hi = 5.0;
+    for (let k = 0; k < 200; k++) {
+      const mid = (lo + hi) / 2;
+      irrFn(mid) > 0 ? lo = mid : hi = mid;
+    }
+    irr = (lo + hi) / 2;
+  }
+
+  // Discounted Payback
+  let cum = cfs[0], dpb = null;
+  for (let i = 1; i < cfs.length; i++) {
+    const prev = cum;
+    cum += cfs[i] / (1 + M.WACC) ** i;
+    if (prev < 0 && cum >= 0) { dpb = (i - 1) + (-prev) / (cum - prev); break; }
+  }
+
+  return { rows, npv, irr, dpb, capex, wc, annOpex, depr, cfs };
+}
+
+// ============================================================
+//  FORMATTING
+// ============================================================
+const fm = v => v === null ? '—' : (v >= 0 ? '+' : '') + (v / 1e6).toFixed(2) + 'M';
+const fp = v => v ? (v * 100).toFixed(1) + '%' : '<14%';
+const fy = v => v !== null ? v.toFixed(2) + ' лет' : '—';
+const f1 = v => (v / 1e6).toFixed(1);
+
+// ============================================================
+//  UI UPDATE
+// ============================================================
+let chartsReady = false;
+let plChart, fcfChart, donutChart;
+
+function update() {
+  const m = computeModel(S.cap, S.price, S.horizon, S.sez);
+
+  // --- KPI cards ---
+  const npvPos = m.npv >= 0;
+  setCard('kpi-npv', 'kv-npv', 'ks-npv',
+    npvPos, '$' + f1(m.npv) + 'M',
+    'горизонт ' + S.horizon + ' лет · WACC 14%');
+  const irrPos = m.irr && m.irr > M.WACC;
+  setCard('kpi-irr', 'kv-irr', null,
+    irrPos, m.irr ? (m.irr * 100).toFixed(1) + '%' : '<14%', null);
+  const dpbPos = m.dpb !== null && m.dpb <= S.horizon;
+  setCard('kpi-dpb', 'kv-dpb', 'ks-dpb',
+    dpbPos, m.dpb !== null ? m.dpb.toFixed(2) + ' лет' : '>'+S.horizon+' лет',
+    m.dpb !== null ? 'окупается в Году ' + Math.ceil(m.dpb) : 'не окупается в горизонте');
+  const yr1 = m.rows[0];
+  setCard('kpi-ebi', 'kv-ebi', 'ks-ebi',
+    true, '$' + f1(yr1.ebitda) + 'M',
+    'маржа ' + (yr1.ebitda / yr1.rev * 100).toFixed(0) + '% · Выручка $' + f1(yr1.rev) + 'M');
+
+  // Maintenance note
+  document.getElementById('maint-note').style.display = S.horizon === 10 ? '' : 'none';
+
+  // --- Slider fill ---
+  const pct = (S.price - 50) / (173 - 50) * 100;
+  document.getElementById('price-slider').style.setProperty('--pct', pct + '%');
+  document.getElementById('price-display').textContent = '$' + S.price + '/м²';
+
+  // --- CAPEX & WC ---
+  const capex1700 = S.cap === 1700;
+  document.getElementById('extra-row').style.display = capex1700 ? '' : 'none';
+  document.getElementById('capex-total').textContent = capex1700 ? '$38.44M' : '$32.44M';
+  document.getElementById('wc-display').textContent  = capex1700 ? '$4.25M' : '$3.00M';
+  document.getElementById('cap-note').textContent     =
+    S.cap === 1200 ? '438 000 м²/год · $32.4M CAPEX' : '620 500 м²/год · $38.4M CAPEX';
+
+  // --- Charts ---
+  if (chartsReady) updateCharts(m);
+
+  // --- Sensitivity table ---
+  updateSensTable(m);
+}
+
+function setCard(cardId, valId, subId, positive, val, sub) {
+  const card = document.getElementById(cardId);
+  card.className = 'kpi ' + (positive ? 'pos' : 'neg');
+  document.getElementById(valId).textContent = val;
+  if (subId && sub) document.getElementById(subId).textContent = sub;
+}
+
+// ============================================================
+//  CHART INIT + UPDATE
+// ============================================================
+const COLORS = {
+  rev:     'rgba(59,130,246,.55)',
+  ebitda:  'rgba(15,188,175,.55)',
+  ni:      'rgba(34,197,94,.60)',
+  niNeg:   'rgba(239,68,68,.55)',
+  cum:     '#e8a020',
+  capLine: 'rgba(239,68,68,.60)',
+  maint:   'rgba(59,130,246,.20)',
+};
+
+const OPEX_COLORS = ['#ef4444','#8b5cf6','#0fbcaf','#10b981','#f59e0b','#6b7280','#ec4899','#3b82f6'];
+const OPEX_LABELS = ['Сырьё','Персонал','Обслуживание','Логистика','Газ','Администрация','Прочее','Электро'];
+
+function initCharts() {
+  const m = computeModel(S.cap, S.price, S.horizon, S.sez);
+
+  // --- P&L Chart ---
+  plChart = new Chart(document.getElementById('plChart'), {
+    type: 'bar',
+    data: buildPLData(m),
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#7a9cc0', font: { family: 'IBM Plex Mono', size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ' $' + (ctx.raw / 1e6).toFixed(2) + 'M' } },
+      },
+      scales: {
+        x: { ticks: { color: '#7a9cc0', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: '#1f3050' } },
+        y: { ticks: { color: '#7a9cc0', font: { family: 'IBM Plex Mono', size: 10 },
+                      callback: v => '$' + (v/1e6).toFixed(0)+'M' },
+             grid: { color: '#1f3050' } },
+      }
+    }
+  });
+
+  // --- Cumulative FCF Chart ---
+  fcfChart = new Chart(document.getElementById('fcfChart'), {
+    type: 'line',
+    data: buildFCFData(m),
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#7a9cc0', font: { family: 'IBM Plex Mono', size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ' $' + (ctx.raw / 1e6).toFixed(2) + 'M' } },
+      },
+      scales: {
+        x: { ticks: { color: '#7a9cc0', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: '#1f3050' } },
+        y: { ticks: { color: '#7a9cc0', font: { family: 'IBM Plex Mono', size: 10 },
+                      callback: v => '$' + (v/1e6).toFixed(0)+'M' },
+             grid: { color: '#1f3050' } },
+      }
+    }
+  });
+
+  // --- Donut Chart ---
+  donutChart = new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: buildDonutData(m),
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#7a9cc0', font: { family: 'IBM Plex Mono', size: 9 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: ctx => ' $' + (ctx.raw / 1e6).toFixed(2) + 'M (' + (ctx.raw / m.annOpex * 100).toFixed(0) + '%)' } },
+      }
+    }
+  });
+
+  chartsReady = true;
+  updateCharts(m);
+}
+
+function buildPLData(m) {
+  const labels = m.rows.map(r => 'Год ' + r.y + (r.isMaint ? '*' : ''));
+  const isMaintArr = m.rows.map(r => r.isMaint);
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Выручка',
+        data: m.rows.map(r => r.rev),
+        backgroundColor: m.rows.map((r, i) => r.isMaint ? COLORS.maint : COLORS.rev),
+        borderRadius: 3,
+      },
+      {
+        label: 'EBITDA',
+        data: m.rows.map(r => r.ebitda),
+        backgroundColor: m.rows.map(r => r.isMaint ? 'rgba(15,188,175,.15)' : COLORS.ebitda),
+        borderRadius: 3,
+      },
+      {
+        label: 'Чист. прибыль',
+        data: m.rows.map(r => r.ni),
+        backgroundColor: m.rows.map(r => r.ni >= 0 ? (r.isMaint ? 'rgba(34,197,94,.2)' : COLORS.ni) : COLORS.niNeg),
+        borderRadius: 3,
+      },
+    ]
+  };
+}
+
+function buildFCFData(m) {
+  const labels = ['Год 0'];
+  const cumVals = [m.cfs[0]];
+  let cum = m.cfs[0];
+  for (let i = 1; i < m.cfs.length; i++) {
+    cum += m.cfs[i] / (1 + M.WACC) ** i;
+    labels.push('Год ' + i);
+    cumVals.push(cum);
+  }
+  const capexLine = labels.map(() => 0); // zero reference = full payback line
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Кум. диск. FCF',
+        data: cumVals, type: 'line',
+        borderColor: COLORS.cum, backgroundColor: 'rgba(232,160,32,.08)',
+        pointBackgroundColor: COLORS.cum, pointRadius: 4, tension: 0.3, fill: true,
+      },
+      {
+        label: 'Точка безубыточности',
+        data: capexLine, type: 'line',
+        borderColor: COLORS.capLine, borderDash: [6,4],
+        pointRadius: 0, fill: false, borderWidth: 1.5,
+      },
+    ]
+  };
+}
+
+function buildDonutData(m) {
+  const prod = M.cap[S.cap];
+  const capex = M.capex[S.cap];
+  const vals = [
+    M.rawM2  * prod,
+    M.fixBase - 750000 - 1000000,  // personnel
+    capex * M.MAINT,
+    M.logM2  * prod,
+    M.gasM2  * prod,
+    750000,
+    1000000 + M.waterM2 * prod,
+    M.elecM2 * prod,
+  ];
+  return {
+    labels: OPEX_LABELS,
+    datasets: [{ data: vals, backgroundColor: OPEX_COLORS, borderColor: '#080d1a', borderWidth: 2 }]
+  };
+}
+
+function updateCharts(m) {
+  // P&L
+  const pd = buildPLData(m);
+  plChart.data.labels = pd.labels;
+  plChart.data.datasets.forEach((ds, i) => {
+    ds.data = pd.datasets[i].data;
+    ds.backgroundColor = pd.datasets[i].backgroundColor;
+  });
+  plChart.update('none');
+
+  // FCF
+  const fd = buildFCFData(m);
+  fcfChart.data.labels = fd.labels;
+  fcfChart.data.datasets.forEach((ds, i) => { ds.data = fd.datasets[i].data; });
+  fcfChart.update('none');
+
+  // Donut
+  const dd = buildDonutData(m);
+  donutChart.data.datasets[0].data = dd.datasets[0].data;
+  donutChart.update('none');
+}
+
+// ============================================================
+//  SENSITIVITY TABLE
+// ============================================================
+function updateSensTable(m) {
+  const H = S.horizon;
+  document.getElementById('sens-hd-rev').textContent = 'Выручка Г' + H;
+  document.getElementById('sens-hd-ni').textContent  = 'Чист. приб Г' + H;
+  const tbody = document.getElementById('sens-body');
+  tbody.innerHTML = '';
+
+  M.PRICES.forEach(p => {
+    const mm   = computeModel(S.cap, p, H, S.sez);
+    const yr1  = mm.rows[0];
+    const yrH  = mm.rows[H - 1];
+    const isActive = p === S.price;
+
+    // NPV class
+    let npvCls = 'npv-f';
+    if (mm.npv > 30e6) npvCls = 'npv-a';
+    else if (mm.npv > 0) npvCls = 'npv-b';
+    else if (mm.npv > -5e6) npvCls = 'npv-z';
+    else if (mm.npv > -30e6) npvCls = 'npv-d';
+
+    const tr = document.createElement('tr');
+    if (isActive) tr.className = 's-active';
+
+    const ni1Pos = yr1.ni >= 0 ? 'color:#22c55e' : 'color:#ef4444';
+    const niHPos = yrH.ni >= 0 ? 'color:#22c55e' : 'color:#ef4444';
+    const irrStr = mm.irr ? (mm.irr * 100).toFixed(1) + '%' : '<14%';
+
+    tr.innerHTML = `
+      <td>$${p}/м²</td>
+      <td>$${f1(yr1.rev)}M</td>
+      <td style="${ni1Pos}">$${f1(yr1.ni)}M</td>
+      <td>$${f1(yrH.rev)}M</td>
+      <td style="${niHPos}">$${f1(yrH.ni)}M</td>
+      <td class="${npvCls}">$${f1(mm.npv)}M</td>
+      <td class="${npvCls}">${irrStr}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ============================================================
+//  CONTROL HANDLERS
+// ============================================================
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 't3' && !chartsReady) { setTimeout(initCharts, 50); }
+}
+
+function setCAP(val, btn) {
+  S.cap = val;
+  document.querySelectorAll('.btn-grp')[0]
+    .querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  update();
+}
+
+function setPRICE(val) {
+  S.price = val;
+  update();
+}
+
+function setHOR(val, btn) {
+  S.horizon = val;
+  document.querySelectorAll('.btn-grp')[1]
+    .querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  update();
+}
+
+function toggleSEZ() {
+  const cb = document.getElementById('sez-cb');
+  S.sez = cb.checked;
+  update();
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  update(); // Initial KPIs + sensitivity table (no charts yet)
+});
+</script>
+</body>
+</html>
