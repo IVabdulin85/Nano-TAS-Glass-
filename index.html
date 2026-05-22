@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NTG · Nano Tas Glass — Investment Dashboard</title>
+<title>Нанокристаллические панели — Investment Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -26,10 +26,10 @@ header{
 }
 .hdr-brand{display:flex;align-items:center;gap:12px}
 .hdr-logo{
-  width:38px;height:38px;background:var(--gold);border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--bg);font-size:11px;letter-spacing:-.5px;
+  width:auto;height:54px;background:transparent;
+  display:flex;align-items:center;flex-shrink:0;
 }
+.hdr-logo svg{display:block;height:100%;width:auto}
 .hdr-title{font-size:15px;font-weight:700;color:var(--text)}
 .hdr-sub{font-size:11px;color:var(--text2);margin-top:1px}
 .hdr-badges{display:flex;gap:8px;align-items:center}
@@ -43,7 +43,7 @@ header{
 
 /* TABS */
 nav{
-  position:sticky;top:59px;z-index:99;
+  position:sticky;top:75px;z-index:99;
   background:var(--bg2);border-bottom:1px solid var(--border);
   display:flex;padding:0 24px;
 }
@@ -81,7 +81,7 @@ nav{
 /* CONTROL PANEL */
 .ctrl-panel{
   background:var(--surface);border:1px solid var(--border);border-radius:12px;
-  padding:18px;position:sticky;top:108px;
+  padding:18px;position:sticky;top:124px;
 }
 .ctrl-section{margin-bottom:18px}
 .ctrl-section:last-child{margin-bottom:0}
@@ -258,10 +258,45 @@ footer{
 <!-- HEADER -->
 <header>
   <div class="hdr-brand">
-    <div class="hdr-logo">NTG</div>
+    <div class="hdr-logo">
+      <svg viewBox="0 0 195 90" xmlns="http://www.w3.org/2000/svg" aria-label="Nano Stone Logo">
+        <!-- Icon: glass slab outline -->
+        <rect x="4" y="4" width="56" height="82" rx="7" ry="7"
+              fill="none" stroke="#0fbcaf" stroke-width="2.2" opacity="0.95"/>
+        <!-- DNA double-helix strands -->
+        <path d="M 14 11 Q 32 17, 50 22 Q 32 28, 14 33 Q 32 39, 50 44 Q 32 50, 14 55 Q 32 61, 50 66 Q 32 72, 14 77 Q 32 83, 50 84"
+              fill="none" stroke="#0fbcaf" stroke-width="1.3" opacity="0.55"/>
+        <path d="M 50 11 Q 32 17, 14 22 Q 32 28, 50 33 Q 32 39, 14 44 Q 32 50, 50 55 Q 32 61, 14 66 Q 32 72, 50 77 Q 32 83, 14 84"
+              fill="none" stroke="#0fbcaf" stroke-width="1.3" opacity="0.55"/>
+        <!-- Glowing dots along strands -->
+        <circle cx="14" cy="11" r="2.3" fill="#0fbcaf"/>
+        <circle cx="50" cy="11" r="2.3" fill="#0fbcaf"/>
+        <circle cx="14" cy="22" r="2.3" fill="#0fbcaf"/>
+        <circle cx="50" cy="22" r="2.3" fill="#0fbcaf"/>
+        <circle cx="14" cy="33" r="2.3" fill="#0fbcaf"/>
+        <circle cx="50" cy="33" r="2.3" fill="#0fbcaf"/>
+        <circle cx="14" cy="44" r="2.3" fill="#0fbcaf"/>
+        <circle cx="50" cy="44" r="2.3" fill="#0fbcaf"/>
+        <circle cx="14" cy="55" r="2.3" fill="#0fbcaf"/>
+        <circle cx="50" cy="55" r="2.3" fill="#0fbcaf"/>
+        <circle cx="14" cy="66" r="2.3" fill="#0fbcaf"/>
+        <circle cx="50" cy="66" r="2.3" fill="#0fbcaf"/>
+        <circle cx="14" cy="77" r="2.3" fill="#0fbcaf"/>
+        <circle cx="50" cy="77" r="2.3" fill="#0fbcaf"/>
+        <!-- Vertical separator -->
+        <line x1="72" y1="12" x2="72" y2="78" stroke="#0fbcaf" stroke-width="0.9" opacity="0.4"/>
+        <!-- Text block -->
+        <text x="82" y="26" font-family="IBM Plex Sans, sans-serif" font-weight="800" font-size="20" fill="#ffffff" letter-spacing="0.04em">NANO</text>
+        <text x="82" y="48" font-family="IBM Plex Sans, sans-serif" font-weight="800" font-size="20" fill="#3b82f6" letter-spacing="0.04em">STONE</text>
+        <text x="82" y="59" font-family="IBM Plex Sans, sans-serif" font-weight="500" font-size="6" fill="#7a9cc0" letter-spacing="0.18em">DNA OF STRENGTH</text>
+        <line x1="82" y1="63" x2="200" y2="63" stroke="#0fbcaf" stroke-width="0.5" opacity="0.4"/>
+        <text x="82" y="76" font-family="IBM Plex Sans, sans-serif" font-weight="700" font-size="13" fill="#0fbcaf" letter-spacing="0.04em">НАНО СТОУН</text>
+        <text x="82" y="85" font-family="IBM Plex Sans, sans-serif" font-weight="400" font-size="5.5" fill="#5e8aa0" letter-spacing="0.14em">GLASS COMPOSITE · KZ</text>
+      </svg>
+    </div>
     <div>
-      <div class="hdr-title">Nano Tas Glass — Нанокристаллический стеклокомпозит</div>
-      <div class="hdr-sub">Завод · г. Кунаев · Казахстан · Pre-Feasibility апрель 2026</div>
+      <div class="hdr-title">Завод нанокристаллических панелей</div>
+      <div class="hdr-sub">г. Конаев · Алматинская обл. · Казахстан · Pre-Feasibility апрель 2026</div>
     </div>
   </div>
   <div class="hdr-badges">
@@ -317,8 +352,8 @@ footer{
           <tr><td>Курс CNY/KZT</td><td>70 тнг</td><td>НБК апрель 2026</td></tr>
           <tr><td>НДС</td><td>12% (включён)</td><td>НК РК 2026</td></tr>
           <tr><td>КПН</td><td>20% / 0% СЭЗ</td><td>НК РК</td></tr>
-          <tr><td>Электроэнергия</td><td>$0.045/кВт·ч</td><td>Тариф Кунаев</td></tr>
-          <tr><td>Природный газ</td><td>$0.06/м³</td><td>Тариф Кунаев</td></tr>
+          <tr><td>Электроэнергия</td><td>$0.045/кВт·ч</td><td>Тариф Конаев</td></tr>
+          <tr><td>Природный газ</td><td>$0.06/м³</td><td>Тариф Конаев</td></tr>
           <tr><td>Режим работы</td><td>24/7 · 365 дней</td><td>Непрерывный цикл</td></tr>
           <tr><td>Кап. ремонт</td><td>1 мес. каждые 5 лет</td><td>Норма отрасли</td></tr>
           <tr><td>Технол. партнёр</td><td>Китай, 4 завода с 2008</td><td>Полный тех. пакет</td></tr>
@@ -335,13 +370,11 @@ footer{
         <tbody>
           <tr><td>Ж/д подъездная ветка</td><td>Отдельно</td><td style="color:var(--red)">Не включено</td></tr>
           <tr><td>Внешние сети за забором</td><td>По ТУ</td><td style="color:var(--red)">Не включено</td></tr>
-          <tr><td>Доставка обор. до Кунаева</td><td>~$0.5–1M</td><td style="color:var(--red)">Не включено</td></tr>
-          <tr><td>Краны и погрузчики (~10 ед.)</td><td>~$200–400K</td><td style="color:var(--red)">Не включено</td></tr>
-          <tr><td>Оборотный капитал</td><td>$3.0M</td><td style="color:var(--amber)">Учтён отдельно</td></tr>
+          <tr><td>Автомобильные подъездные пути</td><td>Отдельно</td><td style="color:var(--red)">Не включено</td></tr>
         </tbody>
       </table>
       <div style="margin-top:10px;padding:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:6px;font-size:10px;color:var(--amber)">
-        ⚠ Потенциальный дополнительный CAPEX: <strong>$0.7–1.4M</strong> (доставка + краны)
+        ⚠ Перечисленные позиции требуют отдельной оценки и финансируются вне базового CAPEX
       </div>
     </div>
   </div>
@@ -382,7 +415,7 @@ footer{
       <div class="pc-flag">🇰🇿</div>
       <div class="pc-country">Казахстан</div>
       <div class="pc-range">$63–173</div>
-      <div class="pc-unit">USD / м² (NTG)</div>
+      <div class="pc-unit">USD / м² (НКП)</div>
       <div class="pc-note">Базовая модель: $63/м² (консервативно)</div>
     </div>
     <div class="price-card">
@@ -402,13 +435,13 @@ footer{
   </div>
 
   <div class="chart-box" style="margin-bottom:20px">
-    <div class="sec-title">Технические характеристики: NTG vs Конкуренты</div>
+    <div class="sec-title">Технические характеристики: Нанокристаллические панели vs Конкуренты</div>
     <div style="overflow-x:auto">
     <table class="cmp-tbl">
       <thead>
         <tr>
           <th style="text-align:left">Параметр</th>
-          <th class="our">NTG (наш)</th>
+          <th class="our">НКП (наш)</th>
           <th>Керамогранит</th>
           <th>Натур. камень</th>
           <th>Лаймстоун</th>
@@ -572,8 +605,7 @@ footer{
           <ul>
             <li>Ж/д ветка (отдельный подряд)</li>
             <li>Внешние сети за забором (по ТУ)</li>
-            <li>Доставка в Кунаев (~$0.5–1M)</li>
-            <li>Краны и погрузчики (~$200–400K)</li>
+            <li>Автомобильные подъездные пути</li>
           </ul>
         </div>
       </div>
@@ -657,7 +689,7 @@ footer{
     Настоящий дашборд создан в целях инвестиционного анализа на стадии предпроектной проработки (точность ±20–25%). Все расчёты носят ориентировочный характер и не являются инвестиционной рекомендацией или гарантией доходности. Итоговые показатели зависят от фактической стоимости строительства, рыночной конъюнктуры и регуляторной среды.
   </div>
   <div class="ft-right">
-    NTG · Nano Tas Glass · г. Кунаев · Казахстан<br>
+    Нанокристаллические панели · г. Конаев · Алматинская обл. · Казахстан<br>
     Pre-Feasibility Rev.1 · Апрель 2026
   </div>
 </footer>
