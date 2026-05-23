@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Завод нанокристаллических панелей — Investment Dashboard v2</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+:root{
+  /* ===== Direction B: Institutional Indigo ===== */
+  --bg:#050b1a;
+  --bg2:#08122a;
+  --surface:#0e1a35;
+  --surface2:#172548;
+  --surface3:#1f2f5a;
+  --border:#1e2c4a;
+  --border2:#2d3f64;
+
+  --amber:#f59e0b;
+  --amber-dim:rgba(245,158,11,.16);
+  --amber-glow:rgba(245,158,11,.10);
+  --amber-soft:rgba(245,158,11,.06);
+
+  --indigo:#6366f1;
+  --indigo-dim:rgba(99,102,241,.15);
+  --indigo-soft:rgba(99,102,241,.06);
+
+  --positive:#10b981;
+  --positive-dim:rgba(16,185,129,.15);
+  --negative:#f43f5e;
+  --negative-dim:rgba(244,63,94,.15);
+  --warn:#fbbf24;
+
+  --text:#e2e8f0;
+  --text2:#94a3b8;
+  --text3:#64748b;
+  --text4:#475569;
+
+  --font-display:'Barlow Condensed',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 800px 400px at top left,rgba(99,102,241,.06),transparent 60%),
+    radial-gradient(ellipse 700px 400px at top right,rgba(245,158,11,.04),transparent 60%);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ============ HEADER ============ */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,18,42,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:12px 28px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-logo{
+  width:auto;height:52px;background:transparent;
+  display:flex;align-items:center;flex-shrink:0;
+}
+.hdr-logo svg{display:block;height:100%;width:auto}
+.hdr-title{
+  font-family:var(--font-display);
+  font-size:22px;font-weight:700;letter-spacing:.005em;
+  color:var(--text);line-height:1.15;
+}
+.hdr-sub{
+  font-family:var(--font-mono);
+  font-size:10.5px;color:var(--text2);
+  margin-top:2px;letter-spacing:.02em;
+}
+.hdr-badges{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.badge{
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text2);
+  padding:5px 12px;border-radius:999px;
+  font-size:10px;font-family:var(--font-mono);
+  font-weight:500;letter-spacing:.04em;
+}
+.badge.amber{
+  background:var(--amber-dim);
+  border-color:rgba(245,158,11,.4);
+  color:var(--amber);
+}
+.badge.indigo{
+  background:var(--indigo-dim);
+  border-color:rgba(99,102,241,.4);
+  color:#a5b4fc;
+}
+
+/* ============ NAV TABS ============ */
+nav{
+  position:sticky;top:76px;z-index:99;
+  background:rgba(8,18,42,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 28px;
+  display:flex;gap:4px;
+}
+.tab-btn{
+  padding:13px 22px;
+  font-family:var(--font-body);
+  font-size:13px;font-weight:600;
+  color:var(--text2);
+  border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all .2s;
+  white-space:nowrap;
+  display:flex;align-items:center;gap:8px;
+}
+.tab-btn .tab-num{
+  font-family:var(--font-mono);
+  font-size:10px;font-weight:600;color:var(--text3);
+  letter-spacing:.06em;
+}
+.tab-btn.active{color:var(--amber);border-bottom-color:var(--amber)}
+.tab-btn.active .tab-num{color:var(--amber)}
+.tab-btn:hover:not(.active){color:var(--text)}
+
+/* ============ LAYOUT ============ */
+.tab-pane{
+  display:none;
+  padding:28px 28px 60px;
+  max-width:1500px;margin:0 auto;
+}
+.tab-pane.active{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============ KPI CARDS ============ */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);gap:14px;
+  margin-bottom:20px;
+}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi{
+  background:linear-gradient(180deg,var(--surface),var(--bg2));
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px 20px;
+  transition:transform .2s ease,border-color .25s ease,box-shadow .25s ease;
+  position:relative;overflow:hidden;
+}
+.kpi:hover{
+  transform:translateY(-2px);
+  border-color:var(--border2);
+}
+.kpi.pos{
+  border-color:rgba(16,185,129,.3);
+  background:linear-gradient(180deg,rgba(16,185,129,.05),var(--bg2));
+}
+.kpi.neg{
+  border-color:rgba(244,63,94,.3);
+  background:linear-gradient(180deg,rgba(244,63,94,.05),var(--bg2));
+}
+.kpi.featured{
+  border-color:rgba(245,158,11,.45);
+  background:linear-gradient(180deg,var(--amber-dim),var(--bg2));
+  box-shadow:0 0 24px rgba(245,158,11,.08);
+}
+.kpi-label{
+  font-family:var(--font-mono);
+  font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:10px;
+}
+.kpi-val{
+  font-family:var(--font-display);
+  font-size:38px;font-weight:700;
+  color:var(--amber);
+  line-height:1;letter-spacing:.005em;
+  margin-bottom:8px;
+}
+.kpi.pos .kpi-val{color:var(--positive)}
+.kpi.neg .kpi-val{color:var(--negative)}
+.kpi-delta{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--font-mono);
+  font-size:11px;font-weight:500;
+  color:var(--text2);
+}
+.kpi-delta.up{color:var(--positive)}
+.kpi-delta.down{color:var(--negative)}
+.kpi-arrow{font-size:10px;line-height:1}
+
+/* ============ SECTION TITLES & CARDS ============ */
+.sec-title{
+  font-family:var(--font-display);
+  font-size:18px;font-weight:600;color:var(--text);
+  letter-spacing:.01em;text-transform:uppercase;
+  margin-bottom:14px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sec-title .sec-tag{
+  font-family:var(--font-mono);font-size:10px;
+  color:var(--text3);text-transform:none;letter-spacing:.06em;font-weight:500;
+}
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px 22px;
+}
+
+/* ============ BENTO GRIDS ============ */
+.bento-strategy{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  gap:14px;
+}
+.bento-strategy > .b-facts   {grid-column:span 12}
+.bento-strategy > .b-assume  {grid-column:span 7}
+.bento-strategy > .b-exclude {grid-column:span 5}
+.bento-strategy > .b-timeline{grid-column:span 12}
+@media(max-width:900px){
+  .bento-strategy > *{grid-column:span 12 !important}
+}
+
+/* Facts grid */
+.facts-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:12px;
+}
+@media(max-width:1100px){.facts-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.facts-grid{grid-template-columns:repeat(2,1fr)}}
+.fact-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:12px;padding:16px 14px;text-align:center;
+  transition:all .2s;
+}
+.fact-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.fact-num{
+  font-family:var(--font-display);
+  font-size:30px;font-weight:700;color:var(--amber);
+  line-height:1;letter-spacing:.005em;
+  margin-bottom:6px;
+}
+.fact-lbl{font-size:11px;color:var(--text2);line-height:1.35}
+
+/* Assumption table */
+.assume-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.assume-tbl thead th{
+  font-family:var(--font-mono);
+  font-size:9.5px;color:var(--text3);font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  text-align:left;padding:8px 10px;
+  border-bottom:1px solid var(--border2);
+  background:var(--bg2);
+}
+.assume-tbl td{
+  padding:9px 10px;border-bottom:1px solid var(--border);
+  color:var(--text2);vertical-align:middle;
+}
+.assume-tbl td:nth-child(2){
+  color:var(--text);
+  font-family:var(--font-mono);font-size:11.5px;
+}
+.assume-tbl td:nth-child(3){
+  font-size:11px;color:var(--text3);
+}
+
+/* Exclude callout */
+.exclude-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.exclude-tbl thead th{
+  font-family:var(--font-mono);
+  font-size:9.5px;color:var(--text3);font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  text-align:left;padding:8px 10px;
+  border-bottom:1px solid var(--border2);background:var(--bg2);
+}
+.exclude-tbl td{
+  padding:9px 10px;border-bottom:1px solid var(--border);
+  color:var(--text);vertical-align:middle;
+}
+.exclude-tbl td:nth-child(2){
+  font-family:var(--font-mono);font-size:11.5px;color:var(--text2);
+}
+.exclude-tbl td:nth-child(3){
+  font-family:var(--font-mono);font-size:10.5px;
+  color:var(--negative);font-weight:500;
+}
+.exclude-note{
+  margin-top:14px;
+  padding:11px 13px;
+  background:rgba(245,158,11,.06);
+  border:1px solid rgba(245,158,11,.22);
+  border-radius:8px;
+  font-size:11px;color:var(--amber);
+  display:flex;align-items:flex-start;gap:8px;
+}
+
+/* Timeline */
+.timeline-wrap{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+}
+@media(max-width:900px){.timeline-wrap{grid-template-columns:1fr}}
+.tl-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:12px;padding:18px 20px;
+}
+.tl-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.tl-title{
+  font-family:var(--font-display);
+  font-size:17px;font-weight:600;color:var(--text);
+}
+.tl-badge{
+  font-family:var(--font-mono);
+  font-size:10.5px;font-weight:600;
+  padding:3px 10px;border-radius:999px;
+  letter-spacing:.04em;
+}
+.tl-badge.fast{background:var(--positive-dim);color:var(--positive)}
+.tl-badge.real{background:rgba(251,191,36,.15);color:var(--warn)}
+.tl-step{display:flex;gap:12px;margin-bottom:11px;align-items:flex-start}
+.tl-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--amber-dim);border:1px solid var(--amber);
+  color:var(--amber);
+  font-family:var(--font-mono);font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.tl-info strong{
+  font-size:12px;color:var(--text);display:block;margin-bottom:2px;
+}
+.tl-info span{font-size:11px;color:var(--text3);line-height:1.4}
+.tl-foot{
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--border);
+  font-size:10.5px;color:var(--text2);
+  display:flex;align-items:center;gap:6px;
+}
+.tl-foot.warn{color:var(--warn)}
+
+/* ============ MARKET TAB ============ */
+.bento-market{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:14px;
+}
+.bento-market > .m-prices  {grid-column:span 12}
+.bento-market > .m-specs   {grid-column:span 12}
+.bento-market > .m-bom     {grid-column:span 12}
+
+.price-cards{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+}
+@media(max-width:768px){.price-cards{grid-template-columns:1fr}}
+.price-card{
+  background:linear-gradient(180deg,var(--surface),var(--bg2));
+  border:1px solid var(--border);border-radius:14px;
+  padding:24px 20px;text-align:center;
+  position:relative;overflow:hidden;
+  transition:all .2s;
+}
+.price-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.price-card.featured{
+  border-color:rgba(245,158,11,.4);
+  background:linear-gradient(180deg,rgba(245,158,11,.07),var(--bg2));
+}
+.pc-flag{font-size:30px;margin-bottom:8px;line-height:1}
+.pc-country{
+  font-family:var(--font-display);
+  font-size:18px;font-weight:600;color:var(--text);
+  margin-bottom:8px;letter-spacing:.005em;
+}
+.pc-range{
+  font-family:var(--font-display);
+  font-size:32px;font-weight:700;color:var(--amber);
+  line-height:1;letter-spacing:.005em;
+  margin-bottom:4px;
+}
+.pc-unit{
+  font-family:var(--font-mono);
+  font-size:10px;color:var(--text3);
+}
+.pc-note{
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid var(--border);
+  font-size:11px;color:var(--text2);line-height:1.4;
+}
+
+/* Comparison table */
+.cmp-wrap{overflow-x:auto;margin:0 -2px;padding:0 2px}
+.cmp-tbl{
+  width:100%;border-collapse:collapse;
+  font-size:12.5px;min-width:760px;
+}
+.cmp-tbl th{
+  font-family:var(--font-mono);
+  font-size:9.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--text3);
+  padding:10px 12px;text-align:center;
+  border-bottom:2px solid var(--border2);background:var(--bg2);
+}
+.cmp-tbl th.our{
+  background:var(--amber-dim);color:var(--amber);
+  border-bottom-color:var(--amber);
+}
+.cmp-tbl th:first-child{text-align:left;font-family:var(--font-mono)}
+.cmp-tbl td{
+  padding:10px 12px;text-align:center;
+  border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:11.5px;color:var(--text2);
+}
+.cmp-tbl td:first-child{
+  text-align:left;color:var(--text3);
+  font-family:var(--font-body);
+}
+.cmp-tbl td.our{background:var(--amber-soft);color:var(--amber);font-weight:600}
+.cmp-tbl .g{color:var(--positive)!important}
+.cmp-tbl .w{color:var(--warn)!important}
+.cmp-tbl .b{color:var(--negative)!important}
+
+/* BOM table */
+.bom-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.bom-tbl th{
+  font-family:var(--font-mono);
+  font-size:9.5px;color:var(--text3);font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;
+  padding:9px 12px;text-align:center;
+  border-bottom:1px solid var(--border2);
+}
+.bom-tbl th:first-child{text-align:left}
+.bom-tbl td{
+  padding:10px 12px;text-align:center;
+  border-bottom:1px solid var(--border);
+  font-family:var(--font-mono);font-size:12px;color:var(--text2);
+}
+.bom-tbl td:first-child{
+  text-align:left;color:var(--text);font-family:var(--font-body);
+}
+.bom-tbl tr.base td{
+  background:var(--amber-soft);color:var(--amber);font-weight:600;
+}
+
+/* ============ FM (FINANCIAL MODEL) LAYOUT ============ */
+.fm-layout{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  gap:16px;align-items:start;
+}
+@media(max-width:1080px){.fm-layout{grid-template-columns:1fr}}
+
+/* Control panel */
+.ctrl-panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px;
+  position:sticky;top:128px;
+  max-height:calc(100vh - 148px);
+  overflow-y:auto;
+}
+.ctrl-panel::-webkit-scrollbar{width:6px}
+.ctrl-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.ctrl-section{
+  padding-bottom:16px;margin-bottom:16px;
+  border-bottom:1px solid var(--border);
+}
+.ctrl-section:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
+.ctrl-label{
+  font-family:var(--font-mono);
+  font-size:9.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.ctrl-label .val{
+  color:var(--amber);font-size:13px;font-weight:700;
+  font-family:var(--font-display);letter-spacing:.005em;
+}
+.btn-grp{display:flex;gap:6px}
+.btn-grp button{
+  flex:1;padding:8px 6px;
+  font-family:var(--font-body);
+  font-size:12px;font-weight:600;
+  border:1px solid var(--border2);
+  background:var(--surface2);color:var(--text2);
+  border-radius:8px;cursor:pointer;
+  transition:all .15s;
+}
+.btn-grp button:hover:not(.active){color:var(--text);border-color:var(--text3)}
+.btn-grp button.active{
+  background:var(--amber);color:var(--bg);
+  border-color:var(--amber);
+}
+
+input[type=range]{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:4px;border-radius:2px;outline:none;cursor:pointer;
+  margin-top:8px;
+  background:linear-gradient(to right,var(--amber) var(--pct,0%),var(--border2) var(--pct,0%));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:16px;height:16px;border-radius:50%;
+  background:var(--amber);
+  border:2px solid var(--bg);
+  cursor:pointer;
+  box-shadow:0 0 8px rgba(245,158,11,.4);
+}
+input[type=range]::-moz-range-thumb{
+  width:16px;height:16px;border-radius:50%;
+  background:var(--amber);border:2px solid var(--bg);
+  cursor:pointer;
+}
+.slider-range{
+  display:flex;justify-content:space-between;
+  font-family:var(--font-mono);font-size:9.5px;
+  color:var(--text3);margin-top:6px;
+}
+.note-line{
+  font-family:var(--font-mono);font-size:9.5px;
+  color:var(--text3);margin-top:6px;letter-spacing:.04em;
+}
+
+.toggle-row{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:10px 0;
+}
+.toggle-text{flex:1}
+.toggle-text strong{font-size:12px;color:var(--text);display:block;margin-bottom:2px}
+.toggle-text small{font-size:10px;color:var(--text3)}
+.tgl{position:relative;width:38px;height:21px;flex-shrink:0}
+.tgl input{opacity:0;width:0;height:0;position:absolute}
+.tgl-track{
+  position:absolute;inset:0;
+  background:var(--border2);border-radius:21px;
+  cursor:pointer;transition:.2s;
+}
+.tgl-track:after{
+  content:'';position:absolute;left:3px;top:3px;
+  width:15px;height:15px;border-radius:50%;
+  background:#fff;transition:.2s;
+}
+.tgl input:checked + .tgl-track{background:var(--amber)}
+.tgl input:checked + .tgl-track:after{transform:translateX(17px)}
+
+/* CAPEX mini-table */
+.capex-tbl{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:6px}
+.capex-tbl tr{border-bottom:1px solid var(--border)}
+.capex-tbl td{padding:5px 0;color:var(--text2);font-family:var(--font-mono);vertical-align:middle}
+.capex-tbl td:last-child{text-align:right;color:var(--text);font-weight:500}
+.capex-tbl .tr-total td{
+  color:var(--amber);font-weight:700;
+  border-top:2px solid var(--border2);padding-top:8px;
+}
+.capex-tbl .tr-extra td{color:var(--warn)}
+.capex-tbl .tr-wc td{color:var(--text3);font-style:italic}
+
+.not-incl{
+  background:rgba(244,63,94,.05);
+  border:1px solid rgba(244,63,94,.18);
+  border-radius:8px;padding:11px;margin-top:12px;
+}
+.not-incl-hd{
+  font-family:var(--font-mono);
+  font-size:9px;color:var(--negative);
+  font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:6px;
+}
+.not-incl li{
+  font-size:10.5px;color:var(--text3);list-style:none;
+  padding:1px 0;line-height:1.4;
+}
+.not-incl li::before{content:'· ';color:var(--negative)}
+
+/* Bento for charts */
+.model-bento{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);gap:14px;
+}
+.model-bento > .m-pl   {grid-column:span 12}
+.model-bento > .m-fcf  {grid-column:span 7}
+.model-bento > .m-don  {grid-column:span 5}
+.model-bento > .m-sens {grid-column:span 12}
+@media(max-width:900px){.model-bento > *{grid-column:span 12 !important}}
+
+.chart-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px 20px;
+}
+.chart-box h4{
+  font-family:var(--font-mono);
+  font-size:9.5px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:14px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.chart-box h4 .ch-tag{
+  font-family:var(--font-mono);font-size:9px;
+  color:var(--text4);font-weight:500;
+}
+.ch-tall{height:280px;position:relative}
+.ch-med{height:240px;position:relative}
+.ch-donut{height:240px;position:relative;max-width:300px;margin:0 auto}
+.maint-note{
+  font-family:var(--font-mono);
+  font-size:9.5px;color:var(--warn);
+  margin-top:8px;letter-spacing:.04em;
+}
+
+/* Sensitivity table */
+.sens-wrap{overflow-x:auto;margin:0 -2px}
+.sens-tbl{
+  width:100%;border-collapse:collapse;
+  font-family:var(--font-mono);font-size:11.5px;
+  white-space:nowrap;min-width:680px;
+}
+.sens-tbl th{
+  padding:9px 12px;text-align:right;
+  font-size:9.5px;color:var(--text3);font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;
+  border-bottom:2px solid var(--border2);
+  background:var(--bg2);
+}
+.sens-tbl th:first-child{text-align:left}
+.sens-tbl td{
+  padding:9px 12px;text-align:right;
+  border-bottom:1px solid var(--border);
+  color:var(--text2);
+}
+.sens-tbl td:first-child{text-align:left;color:var(--text);font-weight:600;font-family:var(--font-body)}
+.sens-tbl tr.s-active{
+  outline:2px solid var(--amber);outline-offset:-1px;
+  background:var(--amber-soft);
+}
+.npv-a{background:rgba(16,185,129,.28);color:#86efac}
+.npv-b{background:rgba(16,185,129,.14);color:#a7f3d0}
+.npv-z{background:rgba(245,158,11,.18);color:var(--amber)}
+.npv-d{background:rgba(244,63,94,.14);color:#fda4af}
+.npv-f{background:rgba(244,63,94,.28);color:var(--negative)}
+
+/* ============ FOOTER ============ */
+footer{
+  border-top:1px solid var(--border);
+  padding:18px 28px;
+  margin-top:40px;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:12px;
+  background:var(--bg2);
+}
+.ft-left{
+  font-size:11px;color:var(--text3);
+  max-width:780px;line-height:1.55;
+}
+.ft-right{
+  font-size:10.5px;color:var(--text3);
+  font-family:var(--font-mono);text-align:right;
+  letter-spacing:.04em;
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header>
+  <div class="hdr-brand">
+    <div class="hdr-logo">
+      <svg viewBox="0 0 195 90" xmlns="http://www.w3.org/2000/svg" aria-label="Nano Stone Logo">
+        <rect x="4" y="4" width="56" height="82" rx="7" ry="7" fill="none" stroke="#f59e0b" stroke-width="2.2" opacity="0.95"/>
+        <path d="M 14 11 Q 32 17, 50 22 Q 32 28, 14 33 Q 32 39, 50 44 Q 32 50, 14 55 Q 32 61, 50 66 Q 32 72, 14 77 Q 32 83, 50 84"
+              fill="none" stroke="#f59e0b" stroke-width="1.3" opacity="0.55"/>
+        <path d="M 50 11 Q 32 17, 14 22 Q 32 28, 50 33 Q 32 39, 14 44 Q 32 50, 50 55 Q 32 61, 14 66 Q 32 72, 50 77 Q 32 83, 14 84"
+              fill="none" stroke="#f59e0b" stroke-width="1.3" opacity="0.55"/>
+        <circle cx="14" cy="11" r="2.3" fill="#f59e0b"/>
+        <circle cx="50" cy="11" r="2.3" fill="#f59e0b"/>
+        <circle cx="14" cy="22" r="2.3" fill="#f59e0b"/>
+        <circle cx="50" cy="22" r="2.3" fill="#f59e0b"/>
+        <circle cx="14" cy="33" r="2.3" fill="#f59e0b"/>
+        <circle cx="50" cy="33" r="2.3" fill="#f59e0b"/>
+        <circle cx="14" cy="44" r="2.3" fill="#f59e0b"/>
+        <circle cx="50" cy="44" r="2.3" fill="#f59e0b"/>
+        <circle cx="14" cy="55" r="2.3" fill="#f59e0b"/>
+        <circle cx="50" cy="55" r="2.3" fill="#f59e0b"/>
+        <circle cx="14" cy="66" r="2.3" fill="#f59e0b"/>
+        <circle cx="50" cy="66" r="2.3" fill="#f59e0b"/>
+        <circle cx="14" cy="77" r="2.3" fill="#f59e0b"/>
+        <circle cx="50" cy="77" r="2.3" fill="#f59e0b"/>
+        <line x1="72" y1="12" x2="72" y2="78" stroke="#f59e0b" stroke-width="0.9" opacity="0.4"/>
+        <text x="82" y="26" font-family="Inter, sans-serif" font-weight="800" font-size="20" fill="#ffffff" letter-spacing="0.04em">NANO</text>
+        <text x="82" y="48" font-family="Inter, sans-serif" font-weight="800" font-size="20" fill="#6366f1" letter-spacing="0.04em">STONE</text>
+        <text x="82" y="59" font-family="Inter, sans-serif" font-weight="500" font-size="6" fill="#94a3b8" letter-spacing="0.18em">DNA OF STRENGTH</text>
+        <line x1="82" y1="63" x2="190" y2="63" stroke="#f59e0b" stroke-width="0.5" opacity="0.4"/>
+        <text x="82" y="76" font-family="Inter, sans-serif" font-weight="700" font-size="13" fill="#f59e0b" letter-spacing="0.04em">НАНО СТОУН</text>
+        <text x="82" y="85" font-family="Inter, sans-serif" font-weight="400" font-size="5.5" fill="#64748b" letter-spacing="0.14em">GLASS COMPOSITE · KZ</text>
+      </svg>
+    </div>
+    <div>
+      <div class="hdr-title">Завод нанокристаллических панелей</div>
+      <div class="hdr-sub">г. Конаев · Алматинская обл. · Казахстан · Pre-Feasibility апрель 2026</div>
+    </div>
+  </div>
+  <div class="hdr-badges">
+    <span class="badge amber">±20–25% точность</span>
+    <span class="badge indigo">v2 · Rev.1</span>
+  </div>
+</header>
+
+<!-- ============ TABS ============ -->
+<nav>
+  <button class="tab-btn active" onclick="showTab('t1',this)"><span class="tab-num">01</span>ТЭО / Стратегия</button>
+  <button class="tab-btn" onclick="showTab('t2',this)"><span class="tab-num">02</span>Рынок и Продукт</button>
+  <button class="tab-btn" onclick="showTab('t3',this)" id="t3btn"><span class="tab-num">03</span>Финансовая Модель</button>
+</nav>
+
+<!-- ============ TAB 1: STRATEGY ============ -->
+<div id="t1" class="tab-pane active">
+  <div class="bento-strategy">
+
+    <div class="card b-facts">
+      <div class="sec-title">Ключевые показатели проекта <span class="sec-tag">PROJECT KEY FACTS</span></div>
+      <div class="facts-grid">
+        <div class="fact-card"><div class="fact-num">1 200</div><div class="fact-lbl">м²/сутки · базовая мощность</div></div>
+        <div class="fact-card"><div class="fact-num">$32.4M</div><div class="fact-lbl">CAPEX (±20–25%)</div></div>
+        <div class="fact-card"><div class="fact-num">$3.0M</div><div class="fact-lbl">Оборотный капитал (3 мес.)</div></div>
+        <div class="fact-card"><div class="fact-num">191+</div><div class="fact-lbl">рабочих мест</div></div>
+        <div class="fact-card"><div class="fact-num">~85%</div><div class="fact-lbl">локальное сырьё</div></div>
+        <div class="fact-card"><div class="fact-num">50+ лет</div><div class="fact-lbl">срок службы материала</div></div>
+      </div>
+    </div>
+
+    <div class="card b-assume">
+      <div class="sec-title">Ключевые допущения <span class="sec-tag">ASSUMPTIONS</span></div>
+      <table class="assume-tbl">
+        <thead><tr><th>Параметр</th><th>Значение</th><th>Источник</th></tr></thead>
+        <tbody>
+          <tr><td>Курс USD/KZT</td><td>480 тнг</td><td>НБК апрель 2026</td></tr>
+          <tr><td>Курс CNY/KZT</td><td>70 тнг</td><td>НБК апрель 2026</td></tr>
+          <tr><td>НДС</td><td>12% (включён)</td><td>НК РК 2026</td></tr>
+          <tr><td>КПН</td><td>20% / 0% СЭЗ</td><td>НК РК</td></tr>
+          <tr><td>Электроэнергия</td><td>$0.045/кВт·ч</td><td>Тариф Конаев</td></tr>
+          <tr><td>Природный газ</td><td>$0.06/м³</td><td>Тариф Конаев</td></tr>
+          <tr><td>Режим работы</td><td>24/7 · 365 дней</td><td>Непрерывный цикл</td></tr>
+          <tr><td>Кап. ремонт</td><td>1 мес. каждые 5 лет</td><td>Норма отрасли</td></tr>
+          <tr><td>Технол. партнёр</td><td>Китай, 4 завода с 2008</td><td>Полный тех. пакет</td></tr>
+          <tr><td>Точность оценки</td><td>±20–25%</td><td>Предпроектная стадия</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card b-exclude">
+      <div class="sec-title">Не включено в CAPEX <span class="sec-tag">OUT OF SCOPE</span></div>
+      <div style="color:var(--text3);font-size:11.5px;margin-bottom:10px;line-height:1.5">Следующие позиции требуют отдельной оценки и должны быть учтены при финальном инвестиционном решении:</div>
+      <table class="exclude-tbl">
+        <thead><tr><th>Позиция</th><th>Ориентир</th><th>Статус</th></tr></thead>
+        <tbody>
+          <tr><td>Ж/д подъездная ветка</td><td>Отдельно</td><td>Не включено</td></tr>
+          <tr><td>Внешние сети за забором</td><td>По ТУ</td><td>Не включено</td></tr>
+          <tr><td>Автомобильные подъездные пути</td><td>Отдельно</td><td>Не включено</td></tr>
+        </tbody>
+      </table>
+      <div class="exclude-note">
+        <span style="font-size:13px;line-height:1">⚠</span>
+        <div>Перечисленные позиции требуют отдельной оценки и финансируются вне базового CAPEX</div>
+      </div>
+    </div>
+
+    <div class="card b-timeline">
+      <div class="sec-title">Сроки реализации <span class="sec-tag">PROJECT TIMELINE</span></div>
+      <div class="timeline-wrap">
+        <div class="tl-card">
+          <div class="tl-head">
+            <div class="tl-title">Оптимистичный путь</div>
+            <div class="tl-badge fast">~22 месяца</div>
+          </div>
+          <div class="tl-step"><div class="tl-num">1</div><div class="tl-info"><strong>Фаза 1 · 0–6 мес.</strong><span>Проектирование, адаптация КИТ→КЗ, тендер ГП</span></div></div>
+          <div class="tl-step"><div class="tl-num">2</div><div class="tl-info"><strong>Фаза 2 · 6–12 мес.</strong><span>Заказ оборудования (Китай, 6 мес.), фундаменты</span></div></div>
+          <div class="tl-step"><div class="tl-num">3</div><div class="tl-info"><strong>Фаза 3 · 12–22 мес.</strong><span>Строительство, монтаж, ПНР, опытная эксплуатация</span></div></div>
+          <div class="tl-foot">⚡ Без регуляторных барьеров · ЮЛ зарегистрировано · земля оформлена</div>
+        </div>
+        <div class="tl-card">
+          <div class="tl-head">
+            <div class="tl-title">Реалистичный путь (ОПО II кл.)</div>
+            <div class="tl-badge real">~36–42 месяца</div>
+          </div>
+          <div class="tl-step"><div class="tl-num">!</div><div class="tl-info"><strong>ТУ Электрики + Газа · 3–6 мес.</strong><span>Основной регуляторный барьер</span></div></div>
+          <div class="tl-step"><div class="tl-num">!</div><div class="tl-info"><strong>Госэкспертиза · 4–7 мес.</strong><span>Критический путь</span></div></div>
+          <div class="tl-step"><div class="tl-num">!</div><div class="tl-info"><strong>Декл. ПБ · КЭР · ПЛАРН · Рег. ОПО</strong><span>Объект опасного производства II класса</span></div></div>
+          <div class="tl-foot warn">⚡ Как ускорить: СЭЗ с готовой инфраструктурой (−6–12 мес.) · EPC-подрядчик</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ TAB 2: MARKET ============ -->
+<div id="t2" class="tab-pane">
+  <div class="bento-market">
+
+    <div class="card m-prices">
+      <div class="sec-title">Сравнение цен по странам <span class="sec-tag">PRICE BENCHMARK</span></div>
+      <div class="price-cards">
+        <div class="price-card featured">
+          <div class="pc-flag">🇰🇿</div>
+          <div class="pc-country">Казахстан</div>
+          <div class="pc-range">$63–173</div>
+          <div class="pc-unit">USD / м² (НКП)</div>
+          <div class="pc-note">Базовая модель: $63/м² (консервативно)</div>
+        </div>
+        <div class="price-card">
+          <div class="pc-flag">🇨🇳</div>
+          <div class="pc-country">Китай (импорт)</div>
+          <div class="pc-range">$50–80</div>
+          <div class="pc-unit">USD / м² + доставка 30–90 дн.</div>
+          <div class="pc-note">Конкурент по цене, но логистика проигрывает</div>
+        </div>
+        <div class="price-card">
+          <div class="pc-flag">🇮🇹</div>
+          <div class="pc-country">Италия (премиум)</div>
+          <div class="pc-range">$170–430</div>
+          <div class="pc-unit">USD / м² (аналоги)</div>
+          <div class="pc-note">Качественный ориентир — потолок цены</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card m-specs">
+      <div class="sec-title">Технические характеристики: Нанокристаллические панели vs Конкуренты <span class="sec-tag">TECH COMPARISON</span></div>
+      <div class="cmp-wrap">
+      <table class="cmp-tbl">
+        <thead>
+          <tr>
+            <th>Параметр</th>
+            <th class="our">НКП (наш)</th>
+            <th>Керамогранит</th>
+            <th>Натур. камень</th>
+            <th>Лаймстоун</th>
+            <th>Мрамор</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Твёрдость (Моос)</td><td class="our g">6.5–7</td><td>5–6</td><td>3–7</td><td class="b">3–4</td><td class="b">3–4</td></tr>
+          <tr><td>Водопоглощение</td><td class="our g">&lt;0.01%</td><td>0.1–0.5%</td><td>0.2–2%</td><td class="b">5–15%</td><td>0.3–1%</td></tr>
+          <tr><td>Морозостойкость</td><td class="our g">F300+</td><td class="w">F75–100</td><td class="w">F50–100</td><td class="b">F25–50</td><td class="b">F25–50</td></tr>
+          <tr><td>Огнестойкость</td><td class="our g">Класс А1 НГ</td><td class="g">Класс А1</td><td class="g">Класс А1</td><td class="g">Класс А1</td><td class="g">Класс А1</td></tr>
+          <tr><td>Сейсмостойкость</td><td class="our g">✅ Прочный</td><td class="w">⚠️ Хрупкий</td><td class="b">❌ Тяжёлый</td><td class="b">❌ Тяжёлый</td><td class="b">❌ Тяжёлый</td></tr>
+          <tr><td>Толщина форматов</td><td class="our">12–35 мм</td><td>3–12 мм</td><td>20–50 мм</td><td>20–50 мм</td><td>20–50 мм</td></tr>
+          <tr><td>Срок службы</td><td class="our g">50+ лет</td><td>30–40 лет</td><td>30–50 лет</td><td class="w">20–30 лет</td><td class="w">20–30 лет</td></tr>
+          <tr><td>МЧС-нормы РК 2025</td><td class="our g">✅ Полностью</td><td class="g">✅ Да</td><td class="g">✅ Да</td><td class="g">✅ Да</td><td class="g">✅ Да</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card m-bom">
+      <div class="sec-title">Размерная линейка BOM <span class="sec-tag">BOM · ТОЛЩИНА</span></div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5">Каждая толщина даёт разный выход м² с тонны сырья и себестоимость сырья на м². Базовый сценарий финансовой модели: <strong style="color:var(--amber)">18 мм</strong></div>
+      <table class="bom-tbl">
+        <thead>
+          <tr>
+            <th>Толщина</th>
+            <th>Выход м²/тонну</th>
+            <th>Стоимость сырья</th>
+            <th>Объём плиты м³/м²</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>8 мм</td><td>36.81</td><td>$6.09/м²</td><td>0.008</td><td><span style="color:var(--text3)">Тонкий формат</span></td></tr>
+          <tr><td>10 мм</td><td>29.44</td><td>$7.61/м²</td><td>0.010</td><td><span style="color:var(--text3)">Стандарт интерьер</span></td></tr>
+          <tr><td>12 мм</td><td>24.54</td><td>$9.13/м²</td><td>0.012</td><td><span style="color:var(--text3)">Интерьер / фасад</span></td></tr>
+          <tr><td>15 мм</td><td>19.63</td><td>$11.41/м²</td><td>0.015</td><td><span style="color:var(--text3)">Фасад лёгкий</span></td></tr>
+          <tr class="base"><td>18 мм ★</td><td>16.36</td><td>$13.70/м²</td><td>0.018</td><td><span style="color:var(--amber);font-weight:700">БАЗА МОДЕЛИ</span></td></tr>
+          <tr><td>20 мм</td><td>14.72</td><td>$15.22/м²</td><td>0.020</td><td><span style="color:var(--text3)">Тяжёлый фасад</span></td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:12px;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:.04em">Плотность смеси ~2785 кг/м³ · Коэффициент сырьё→продукт: 0.82 · Форматы: 3000×1600 / 2800×1600 мм</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ TAB 3: FINANCIAL MODEL ============ -->
+<div id="t3" class="tab-pane">
+  <div class="fm-layout">
+
+    <!-- LEFT: CONTROLS -->
+    <div class="ctrl-panel">
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Мощность завода</div>
+        <div class="btn-grp" id="bg-cap">
+          <button class="active" onclick="setCAP(1200,this)">1 200 м²/д</button>
+          <button onclick="setCAP(1700,this)">1 700 м²/д</button>
+        </div>
+        <div class="note-line" id="cap-note">438 000 м²/год · $32.4M CAPEX</div>
+      </div>
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Цена продажи <span class="val" id="price-display">$63/м²</span></div>
+        <input type="range" id="price-slider" min="50" max="173" value="63"
+          oninput="setPRICE(+this.value)" style="--pct:10.6%">
+        <div class="slider-range"><span>$50</span><span>$110</span><span>$173</span></div>
+      </div>
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Горизонт расчёта</div>
+        <div class="btn-grp" id="bg-hor">
+          <button class="active" onclick="setHOR(5,this)">5 лет</button>
+          <button onclick="setHOR(10,this)">10 лет</button>
+        </div>
+        <div class="note-line">10 лет: Год 6 = 11/12 мощности (кап. ремонт)</div>
+      </div>
+
+      <div class="ctrl-section">
+        <label class="toggle-row" onclick="toggleSEZ()">
+          <div class="tgl"><input type="checkbox" id="sez-cb"><span class="tgl-track"></span></div>
+          <div class="toggle-text">
+            <strong>СЭЗ — КПН 0%</strong>
+            <small>Если участок в СЭЗ. Иначе: КПН 20%</small>
+          </div>
+        </label>
+      </div>
+
+      <div class="ctrl-section">
+        <div class="ctrl-label">Структура CAPEX</div>
+        <table class="capex-tbl" id="capex-tbl">
+          <tr><td>Земля и площадка</td><td>$0.44M</td></tr>
+          <tr><td>Здание + строй.</td><td>$11.76M</td></tr>
+          <tr><td>Оборудование (Китай)</td><td>$11.77M</td></tr>
+          <tr><td>Команда проекта</td><td>$2.17M</td></tr>
+          <tr><td>Колёсная техника</td><td>$0.39M</td></tr>
+          <tr><td>Разрешения</td><td>$0.50M</td></tr>
+          <tr><td>Contingency 20%</td><td>$5.41M</td></tr>
+          <tr id="extra-row" style="display:none" class="tr-extra"><td>+Доп. оборудование</td><td>+$6.00M</td></tr>
+          <tr class="tr-total"><td>ИТОГО</td><td id="capex-total">$32.44M</td></tr>
+          <tr class="tr-wc"><td>+ Обор. капитал</td><td id="wc-display">$3.00M</td></tr>
+        </table>
+        <div class="not-incl">
+          <div class="not-incl-hd">Не включено в CAPEX</div>
+          <ul>
+            <li>Ж/д ветка (отдельный подряд)</li>
+            <li>Внешние сети за забором (по ТУ)</li>
+            <li>Автомобильные подъездные пути</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: KPI + CHARTS -->
+    <div>
+      <!-- KPI -->
+      <div class="kpi-grid">
+        <div class="kpi" id="kpi-npv">
+          <div class="kpi-label">NPV (диск. @14%)</div>
+          <div class="kpi-val" id="kv-npv">—</div>
+          <div class="kpi-delta up" id="ks-npv">горизонт 5 лет</div>
+        </div>
+        <div class="kpi" id="kpi-irr">
+          <div class="kpi-label">IRR</div>
+          <div class="kpi-val" id="kv-irr">—</div>
+          <div class="kpi-delta up">vs WACC 14%</div>
+        </div>
+        <div class="kpi" id="kpi-dpb">
+          <div class="kpi-label">Дисконт. окупаемость</div>
+          <div class="kpi-val" id="kv-dpb">—</div>
+          <div class="kpi-delta up" id="ks-dpb">лет от Года 0</div>
+        </div>
+        <div class="kpi featured" id="kpi-ebi">
+          <div class="kpi-label">EBITDA Год 1</div>
+          <div class="kpi-val" id="kv-ebi">—</div>
+          <div class="kpi-delta up" id="ks-ebi">маржа —%</div>
+        </div>
+      </div>
+
+      <!-- Bento charts -->
+      <div class="model-bento">
+
+        <div class="chart-box m-pl">
+          <h4>P&amp;L — Выручка / EBITDA / Чистая прибыль по годам <span class="ch-tag">Chart.js · custom theme</span></h4>
+          <div class="ch-tall"><canvas id="plChart"></canvas></div>
+          <div class="maint-note" id="maint-note" style="display:none">* Год 6 — плановый капитальный ремонт (11 месяцев работы)</div>
+        </div>
+
+        <div class="chart-box m-fcf">
+          <h4>Кумулятивный дисконтированный FCF <span class="ch-tag">DCF</span></h4>
+          <div class="ch-med"><canvas id="fcfChart"></canvas></div>
+        </div>
+
+        <div class="chart-box m-don">
+          <h4>Структура OPEX <span class="ch-tag">8 категорий</span></h4>
+          <div class="ch-donut"><canvas id="donutChart"></canvas></div>
+        </div>
+
+        <div class="chart-box m-sens">
+          <h4>Анализ чувствительности — цена продажи vs показатели <span class="ch-tag">SENSITIVITY</span></h4>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:12px">При текущих настройках мощности, горизонта и режима СЭЗ. Выделена текущая цена.</div>
+          <div class="sens-wrap">
+            <table class="sens-tbl" id="sens-tbl">
+              <thead>
+                <tr>
+                  <th>Цена /м²</th>
+                  <th>Выручка Г1</th>
+                  <th>Чист. приб Г1</th>
+                  <th id="sens-hd-rev">Выручка Г5</th>
+                  <th id="sens-hd-ni">Чист. приб Г5</th>
+                  <th>NPV</th>
+                  <th>IRR</th>
+                </tr>
+              </thead>
+              <tbody id="sens-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="ft-left">
+    Настоящий дашборд создан в целях инвестиционного анализа на стадии предпроектной проработки (точность ±20–25%). Все расчёты носят ориентировочный характер и не являются инвестиционной рекомендацией или гарантией доходности. Итоговые показатели зависят от фактической стоимости строительства, рыночной конъюнктуры и регуляторной среды.
+  </div>
+  <div class="ft-right">
+    Нанокристаллические панели · г. Конаев · Алматинская обл. · Казахстан<br>
+    Pre-Feasibility · Rev.1 v2 · апрель 2026
+  </div>
+</footer>
+
+<script>
+// ============================================================
+//  MODEL CONSTANTS (1:1 from v1 — claude_for_dashboard.xlsx)
+// ============================================================
+const M = {
+  cap:    { 1200: 438000, 1700: 620500 },
+  capex:  { 1200: 32437871.44, 1700: 38437871.44 },
+  wc:     { 1200: 2999437, 1700: 4249101 },
+  varM2:  19.0626,
+  fixBase: 3511592,
+  WACC:   0.14,
+  TAX:    0.20,
+  INFL:   0.07,
+  DEPR:   25,
+  MAINT:  0.05,
+  rawM2:   13.6964,
+  gasM2:    2.0690,
+  elecM2:   1.1470,
+  logM2:    2.1000,
+  waterM2:  0.0497,
+  PRICES:  [50, 63, 80, 100, 115, 130, 150, 173],
+};
+
+const S = { cap: 1200, price: 63, horizon: 5, sez: false };
+
+// ============================================================
+//  CORE MODEL (identical to v1)
+// ============================================================
+function computeModel(cap, price0, horizon, sez) {
+  const prod    = M.cap[cap];
+  const capex   = M.capex[cap];
+  const wc      = M.wc[cap];
+  const depr    = capex / M.DEPR;
+  const maint   = capex * M.MAINT;
+  const fixOpex = M.fixBase + maint;
+  const varOpex = M.varM2 * prod;
+  const annOpex = fixOpex + varOpex;
+  const tax     = sez ? 0 : M.TAX;
+
+  const cfs  = [-(capex + wc)];
+  const rows = [];
+
+  for (let y = 1; y <= horizon; y++) {
+    const isMaint = (horizon === 10 && y === 6);
+    const p       = isMaint ? prod * (11/12) : prod;
+    const opex_y  = isMaint ? (M.varM2 * p + fixOpex) : annOpex;
+    const price   = price0 * (1 + M.INFL) ** (y - 1);
+    const rev     = p * price;
+    const ebitda  = rev - opex_y;
+    const ebit    = ebitda - depr;
+    const taxes   = ebit > 0 ? ebit * tax : 0;
+    const ni      = ebit - taxes;
+    const fcf0    = ni + depr;
+    const fcf     = y === horizon ? fcf0 + wc : fcf0;
+    rows.push({ y, rev, ebitda, ebit, ni, fcf, price, isMaint });
+    cfs.push(fcf);
+  }
+
+  const npv = cfs.reduce((s, cf, i) => s + cf / (1 + M.WACC) ** i, 0);
+
+  const irrFn = r => cfs.reduce((s, cf, i) => s + cf / (1 + r) ** i, 0);
+  let irr = null;
+  if (irrFn(0.001) > 0) {
+    let lo = 0.001, hi = 5.0;
+    for (let k = 0; k < 200; k++) {
+      const mid = (lo + hi) / 2;
+      irrFn(mid) > 0 ? lo = mid : hi = mid;
+    }
+    irr = (lo + hi) / 2;
+  }
+
+  let cum = cfs[0], dpb = null;
+  for (let i = 1; i < cfs.length; i++) {
+    const prev = cum;
+    cum += cfs[i] / (1 + M.WACC) ** i;
+    if (prev < 0 && cum >= 0) { dpb = (i - 1) + (-prev) / (cum - prev); break; }
+  }
+
+  return { rows, npv, irr, dpb, capex, wc, annOpex, depr, cfs };
+}
+
+// ============================================================
+//  FORMATTERS
+// ============================================================
+const f1 = v => (v / 1e6).toFixed(1);
+const f2 = v => (v / 1e6).toFixed(2);
+
+// ============================================================
+//  COUNT-UP ANIMATION
+// ============================================================
+function animateValue(el, target, fmt, duration = 700) {
+  if (!el) return;
+  const startVal = parseFloat(el.dataset.cur || 0);
+  const targetVal = isNaN(target) ? 0 : target;
+  const start = performance.now();
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  function frame(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const v = startVal + (targetVal - startVal) * easeOut(t);
+    el.textContent = fmt(v);
+    if (t < 1) requestAnimationFrame(frame);
+    else el.dataset.cur = targetVal;
+  }
+  requestAnimationFrame(frame);
+}
+
+// ============================================================
+//  UI UPDATE
+// ============================================================
+let chartsReady = false;
+let plChart, fcfChart, donutChart;
+
+function update() {
+  const m = computeModel(S.cap, S.price, S.horizon, S.sez);
+
+  // KPI cards
+  const npvPos = m.npv >= 0;
+  setKPIClass('kpi-npv', npvPos);
+  animateValue(document.getElementById('kv-npv'), m.npv, v => '$' + (v/1e6).toFixed(1) + 'M');
+  document.getElementById('ks-npv').textContent = 'горизонт ' + S.horizon + ' лет · WACC 14%';
+  document.getElementById('ks-npv').className = 'kpi-delta ' + (npvPos ? 'up' : 'down');
+
+  const irrPos = m.irr && m.irr > M.WACC;
+  setKPIClass('kpi-irr', irrPos);
+  const irrEl = document.getElementById('kv-irr');
+  if (m.irr) {
+    animateValue(irrEl, m.irr * 100, v => v.toFixed(1) + '%');
+  } else {
+    irrEl.textContent = '<14%';
+    irrEl.dataset.cur = 0;
+  }
+
+  const dpbPos = m.dpb !== null && m.dpb <= S.horizon;
+  setKPIClass('kpi-dpb', dpbPos);
+  const dpbEl = document.getElementById('kv-dpb');
+  if (m.dpb !== null) {
+    animateValue(dpbEl, m.dpb, v => v.toFixed(2) + 'y');
+  } else {
+    dpbEl.textContent = '>' + S.horizon + 'y';
+    dpbEl.dataset.cur = 0;
+  }
+  document.getElementById('ks-dpb').textContent = m.dpb !== null ?
+    'окупается в Году ' + Math.ceil(m.dpb) : 'не окупается в горизонте';
+
+  const yr1 = m.rows[0];
+  animateValue(document.getElementById('kv-ebi'), yr1.ebitda, v => '$' + (v/1e6).toFixed(1) + 'M');
+  document.getElementById('ks-ebi').textContent =
+    'маржа ' + (yr1.ebitda / yr1.rev * 100).toFixed(0) + '% · Выручка $' + f1(yr1.rev) + 'M';
+
+  // Maintenance note
+  document.getElementById('maint-note').style.display = S.horizon === 10 ? '' : 'none';
+
+  // Slider fill
+  const pct = (S.price - 50) / (173 - 50) * 100;
+  document.getElementById('price-slider').style.setProperty('--pct', pct + '%');
+  document.getElementById('price-display').textContent = '$' + S.price + '/м²';
+
+  // CAPEX & WC
+  const capex1700 = S.cap === 1700;
+  document.getElementById('extra-row').style.display = capex1700 ? '' : 'none';
+  document.getElementById('capex-total').textContent = capex1700 ? '$38.44M' : '$32.44M';
+  document.getElementById('wc-display').textContent  = capex1700 ? '$4.25M' : '$3.00M';
+  document.getElementById('cap-note').textContent     =
+    S.cap === 1200 ? '438 000 м²/год · $32.4M CAPEX' : '620 500 м²/год · $38.4M CAPEX';
+
+  if (chartsReady) updateCharts(m);
+  updateSensTable(m);
+}
+
+function setKPIClass(id, pos) {
+  const kpi = document.getElementById(id);
+  kpi.classList.remove('pos','neg');
+  kpi.classList.add(pos ? 'pos' : 'neg');
+}
+
+// ============================================================
+//  CHART STYLING (Indigo Navy + Amber palette)
+// ============================================================
+const CHART_FONT = {family:'IBM Plex Mono',size:10.5};
+const COLORS = {
+  rev:     'rgba(99,102,241,.6)',    // indigo
+  revLine: '#6366f1',
+  ebitda:  'rgba(245,158,11,.65)',   // amber
+  ebitdaL: '#f59e0b',
+  ni:      'rgba(16,185,129,.65)',
+  niLine:  '#10b981',
+  niNeg:   'rgba(244,63,94,.6)',
+  cum:     '#f59e0b',
+  capLine: 'rgba(244,63,94,.55)',
+  maint:   'rgba(99,102,241,.22)',
+  grid:    'rgba(30,44,74,.6)',
+  axis:    '#64748b',
+};
+const DONUT_COLORS = ['#f59e0b','#6366f1','#10b981','#a78bfa','#fbbf24','#94a3b8','#ec4899','#06b6d4'];
+const DONUT_LABELS = ['Сырьё','Персонал','Обслуживание','Логистика','Газ','Администрация','Прочее','Электро'];
+
+function initCharts() {
+  const m = computeModel(S.cap, S.price, S.horizon, S.sez);
+
+  plChart = new Chart(document.getElementById('plChart'), {
+    type: 'bar',
+    data: buildPLData(m),
+    options: {
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:600,easing:'easeOutCubic'},
+      plugins:{
+        legend:{labels:{color:'#94a3b8',font:CHART_FONT,boxWidth:14,padding:14}},
+        tooltip:{
+          backgroundColor:'#0e1a35',borderColor:'#1e2c4a',borderWidth:1,
+          titleColor:'#e2e8f0',bodyColor:'#cbd5e1',
+          titleFont:{family:'IBM Plex Mono',size:11},bodyFont:CHART_FONT,
+          padding:10,boxPadding:6,
+          callbacks:{label:c=>' '+c.dataset.label+': $'+(c.raw/1e6).toFixed(2)+'M'}
+        }
+      },
+      scales:{
+        x:{ticks:{color:COLORS.axis,font:CHART_FONT},grid:{color:COLORS.grid}},
+        y:{ticks:{color:COLORS.axis,font:CHART_FONT,callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:COLORS.grid}}
+      }
+    }
+  });
+
+  fcfChart = new Chart(document.getElementById('fcfChart'), {
+    type:'line',
+    data:buildFCFData(m),
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:600,easing:'easeOutCubic'},
+      plugins:{
+        legend:{labels:{color:'#94a3b8',font:CHART_FONT,boxWidth:14,padding:12}},
+        tooltip:{
+          backgroundColor:'#0e1a35',borderColor:'#1e2c4a',borderWidth:1,
+          titleColor:'#e2e8f0',bodyColor:'#cbd5e1',
+          titleFont:{family:'IBM Plex Mono',size:11},bodyFont:CHART_FONT,
+          padding:10,boxPadding:6,
+          callbacks:{label:c=>' $'+(c.raw/1e6).toFixed(2)+'M'}
+        }
+      },
+      scales:{
+        x:{ticks:{color:COLORS.axis,font:CHART_FONT},grid:{color:COLORS.grid}},
+        y:{ticks:{color:COLORS.axis,font:CHART_FONT,callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:COLORS.grid}}
+      }
+    }
+  });
+
+  donutChart = new Chart(document.getElementById('donutChart'), {
+    type:'doughnut',
+    data:buildDonutData(m),
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'64%',
+      animation:{animateRotate:true,animateScale:false,duration:800,easing:'easeOutCubic'},
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#94a3b8',font:{family:'IBM Plex Mono',size:9.5},boxWidth:10,padding:8}},
+        tooltip:{
+          backgroundColor:'#0e1a35',borderColor:'#1e2c4a',borderWidth:1,
+          titleColor:'#e2e8f0',bodyColor:'#cbd5e1',
+          titleFont:{family:'IBM Plex Mono',size:11},bodyFont:CHART_FONT,
+          padding:10,boxPadding:6,
+          callbacks:{label:c=>' $'+(c.raw/1e6).toFixed(2)+'M ('+(c.raw/m.annOpex*100).toFixed(0)+'%)'}
+        }
+      }
+    }
+  });
+
+  chartsReady = true;
+  updateCharts(m);
+}
+
+function buildPLData(m) {
+  const labels = m.rows.map(r => 'Год ' + r.y + (r.isMaint ? '*' : ''));
+  return {
+    labels,
+    datasets:[
+      {label:'Выручка',data:m.rows.map(r=>r.rev),
+       backgroundColor:m.rows.map(r=>r.isMaint?COLORS.maint:COLORS.rev),
+       borderColor:COLORS.revLine,borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'EBITDA',data:m.rows.map(r=>r.ebitda),
+       backgroundColor:m.rows.map(r=>r.isMaint?'rgba(245,158,11,.20)':COLORS.ebitda),
+       borderColor:COLORS.ebitdaL,borderWidth:1,borderRadius:4,borderSkipped:false},
+      {label:'Чист. прибыль',data:m.rows.map(r=>r.ni),
+       backgroundColor:m.rows.map(r=>r.ni>=0?(r.isMaint?'rgba(16,185,129,.25)':COLORS.ni):COLORS.niNeg),
+       borderColor:m.rows.map(r=>r.ni>=0?COLORS.niLine:'#f43f5e'),borderWidth:1,borderRadius:4,borderSkipped:false}
+    ]
+  };
+}
+
+function buildFCFData(m) {
+  const labels = ['Год 0'];
+  const cumVals = [m.cfs[0]];
+  let cum = m.cfs[0];
+  for (let i = 1; i < m.cfs.length; i++) {
+    cum += m.cfs[i] / (1 + M.WACC) ** i;
+    labels.push('Год ' + i);
+    cumVals.push(cum);
+  }
+  const zero = labels.map(()=>0);
+  return {
+    labels,
+    datasets:[
+      {label:'Кум. диск. FCF',data:cumVals,type:'line',
+       borderColor:COLORS.cum,backgroundColor:'rgba(245,158,11,.10)',
+       pointBackgroundColor:COLORS.cum,pointRadius:4,pointHoverRadius:6,
+       tension:0.35,fill:true,borderWidth:2.4},
+      {label:'Точка безубыточности',data:zero,type:'line',
+       borderColor:COLORS.capLine,borderDash:[6,4],
+       pointRadius:0,fill:false,borderWidth:1.5}
+    ]
+  };
+}
+
+function buildDonutData(m) {
+  const prod = M.cap[S.cap];
+  const capex = M.capex[S.cap];
+  const vals = [
+    M.rawM2  * prod,                            // raw materials
+    M.fixBase - 750000 - 1000000,                // personnel
+    capex * M.MAINT,                            // maintenance
+    M.logM2  * prod,                            // logistics
+    M.gasM2  * prod,                            // gas
+    750000,                                     // admin
+    1000000 + M.waterM2 * prod,                 // other
+    M.elecM2 * prod                             // electricity
+  ];
+  return {
+    labels:DONUT_LABELS,
+    datasets:[{data:vals,backgroundColor:DONUT_COLORS,borderColor:'#050b1a',borderWidth:2}]
+  };
+}
+
+function updateCharts(m) {
+  const pd = buildPLData(m);
+  plChart.data.labels = pd.labels;
+  plChart.data.datasets.forEach((ds,i)=>{
+    ds.data = pd.datasets[i].data;
+    ds.backgroundColor = pd.datasets[i].backgroundColor;
+    if (Array.isArray(pd.datasets[i].borderColor)) ds.borderColor = pd.datasets[i].borderColor;
+  });
+  plChart.update('none');
+
+  const fd = buildFCFData(m);
+  fcfChart.data.labels = fd.labels;
+  fcfChart.data.datasets.forEach((ds,i)=>{ds.data = fd.datasets[i].data});
+  fcfChart.update('none');
+
+  const dd = buildDonutData(m);
+  donutChart.data.datasets[0].data = dd.datasets[0].data;
+  donutChart.update('none');
+}
+
+// ============================================================
+//  SENSITIVITY TABLE
+// ============================================================
+function updateSensTable(m) {
+  const H = S.horizon;
+  document.getElementById('sens-hd-rev').textContent = 'Выручка Г' + H;
+  document.getElementById('sens-hd-ni').textContent  = 'Чист. приб Г' + H;
+  const tbody = document.getElementById('sens-body');
+  tbody.innerHTML = '';
+
+  M.PRICES.forEach(p => {
+    const mm   = computeModel(S.cap, p, H, S.sez);
+    const yr1  = mm.rows[0];
+    const yrH  = mm.rows[H - 1];
+    const isActive = p === S.price;
+
+    let npvCls = 'npv-f';
+    if (mm.npv > 30e6) npvCls = 'npv-a';
+    else if (mm.npv > 0) npvCls = 'npv-b';
+    else if (mm.npv > -5e6) npvCls = 'npv-z';
+    else if (mm.npv > -30e6) npvCls = 'npv-d';
+
+    const tr = document.createElement('tr');
+    if (isActive) tr.className = 's-active';
+
+    const ni1Pos = yr1.ni >= 0 ? 'color:#10b981' : 'color:#f43f5e';
+    const niHPos = yrH.ni >= 0 ? 'color:#10b981' : 'color:#f43f5e';
+    const irrStr = mm.irr ? (mm.irr * 100).toFixed(1) + '%' : '<14%';
+
+    tr.innerHTML = `
+      <td>$${p}/м²</td>
+      <td>$${f1(yr1.rev)}M</td>
+      <td style="${ni1Pos}">$${f1(yr1.ni)}M</td>
+      <td>$${f1(yrH.rev)}M</td>
+      <td style="${niHPos}">$${f1(yrH.ni)}M</td>
+      <td class="${npvCls}">$${f1(mm.npv)}M</td>
+      <td class="${npvCls}">${irrStr}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ============================================================
+//  CONTROL HANDLERS
+// ============================================================
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 't3' && !chartsReady) { setTimeout(initCharts, 50); }
+}
+
+function setCAP(val, btn) {
+  S.cap = val;
+  document.querySelectorAll('#bg-cap button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  update();
+}
+
+function setPRICE(val) {
+  S.price = val;
+  update();
+}
+
+function setHOR(val, btn) {
+  S.horizon = val;
+  document.querySelectorAll('#bg-hor button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  update();
+}
+
+function toggleSEZ() {
+  const cb = document.getElementById('sez-cb');
+  // Wait for the click to flip the checkbox before reading
+  setTimeout(()=>{ S.sez = cb.checked; update(); }, 0);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  update();
+});
+</script>
+
+</body>
+</html>
