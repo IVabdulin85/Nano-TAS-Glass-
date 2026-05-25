@@ -700,6 +700,103 @@ input[type=range]::-moz-range-thumb{
 .npv-d{background:rgba(244,63,94,.14);color:#fda4af}
 .npv-f{background:rgba(244,63,94,.28);color:var(--negative)}
 
+/* ============ TAB 2: REGULATORY SECTION ============ */
+.bento-market > .m-reg {grid-column:span 12}
+.game-changers{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;
+}
+@media(max-width:768px){.game-changers{grid-template-columns:1fr}}
+.gc-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:18px 20px;
+  border-left:3px solid var(--text3);
+}
+.gc-card.fire{border-left-color:#f43f5e}
+.gc-card.seismic{border-left-color:var(--amber)}
+.gc-tag{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--text3);
+  margin-bottom:8px;
+}
+.gc-card.fire .gc-tag{color:#f43f5e}
+.gc-card.seismic .gc-tag{color:var(--amber)}
+.gc-title{
+  font-family:var(--font-display);font-size:20px;font-weight:600;
+  color:var(--text);margin-bottom:8px;letter-spacing:.005em;
+}
+.gc-text{font-size:12.5px;color:var(--text2);line-height:1.55}
+.gc-text b{color:var(--text)}
+
+.sec-subtitle{
+  font-family:var(--font-mono);font-size:11px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--text2);
+  margin-bottom:10px;margin-top:8px;
+}
+.reg-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.reg-tbl thead th{
+  font-family:var(--font-mono);font-size:9.5px;color:var(--text3);
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  text-align:left;padding:8px 12px;
+  border-bottom:1px solid var(--border2);background:var(--bg2);
+}
+.reg-tbl td{
+  padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);
+}
+.reg-tbl td:nth-child(1){color:var(--text);font-weight:500}
+.reg-tbl td:nth-child(2){color:var(--amber);font-family:var(--font-mono);font-size:11.5px;font-weight:600}
+.reg-tbl td:nth-child(3){color:var(--text3);font-size:11.5px}
+
+.reg-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+@media(max-width:900px){.reg-cols{grid-template-columns:1fr}}
+.partners,.channels{display:flex;flex-direction:column;gap:8px}
+.partner-card,.channel-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:11px 13px;
+}
+.partner-card strong,.channel-card strong{
+  display:block;font-family:var(--font-display);font-size:14px;
+  font-weight:600;color:var(--text);margin-bottom:3px;letter-spacing:.005em;
+}
+.partner-card span,.channel-card span{font-size:11.5px;color:var(--text2);line-height:1.45}
+
+/* ============ TAB 4: GALLERY ============ */
+.gallery-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
+  gap:18px;
+}
+.render-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  transition:transform .25s,border-color .25s;
+  display:flex;flex-direction:column;
+  margin:0;
+}
+.render-card:hover{
+  transform:translateY(-3px);
+  border-color:var(--amber);
+}
+.render-card img{
+  display:block;width:100%;height:240px;object-fit:cover;
+  background:var(--bg2);
+}
+.render-card figcaption{padding:14px 16px 16px}
+.cap-num{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;
+  letter-spacing:.1em;color:var(--amber);margin-bottom:4px;
+}
+.cap-title{
+  font-family:var(--font-display);font-size:18px;font-weight:600;
+  color:var(--text);margin-bottom:6px;letter-spacing:.005em;line-height:1.2;
+}
+.cap-desc{font-size:12px;color:var(--text2);line-height:1.5}
+
 /* ============ FOOTER ============ */
 footer{
   border-top:1px solid var(--border);
@@ -771,6 +868,7 @@ footer{
   <button class="tab-btn active" onclick="showTab('t1',this)"><span class="tab-num">01</span>ТЭО / Стратегия</button>
   <button class="tab-btn" onclick="showTab('t2',this)"><span class="tab-num">02</span>Рынок и Продукт</button>
   <button class="tab-btn" onclick="showTab('t3',this)" id="t3btn"><span class="tab-num">03</span>Финансовая Модель</button>
+  <button class="tab-btn" onclick="showTab('t4',this)"><span class="tab-num">04</span>Завод и Применение</button>
 </nav>
 
 <!-- ============ TAB 1: STRATEGY ============ -->
@@ -886,7 +984,7 @@ footer{
     </div>
 
     <div class="card m-specs">
-      <div class="sec-title">Технические характеристики: Нанокристаллические панели vs Конкуренты <span class="sec-tag">TECH COMPARISON</span></div>
+      <div class="sec-title">Технические характеристики: Нанокристаллических панелей vs Конкуренты <span class="sec-tag">TECH COMPARISON</span></div>
       <div class="cmp-wrap">
       <table class="cmp-tbl">
         <thead>
@@ -936,6 +1034,84 @@ footer{
         </tbody>
       </table>
       <div style="margin-top:12px;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:.04em">Плотность смеси ~2785 кг/м³ · Коэффициент сырьё→продукт: 0.82 · Форматы: 3000×1600 / 2800×1600 мм</div>
+    </div>
+
+    <div class="card m-reg">
+      <div class="sec-title">Допуск на рынок и нормативный путь <span class="sec-tag">REGULATORY / GO-TO-MARKET</span></div>
+
+      <div class="game-changers">
+        <div class="gc-card fire">
+          <div class="gc-tag">🔥 Game Changer #1</div>
+          <div class="gc-title">МЧС РК · новые нормы май 2025</div>
+          <div class="gc-text">Ужесточение требований к негорючести (НГ) для зданий выше 2 этажей. <b>HPL и АКП (алюкобонд)</b> получают прямые ограничения применения — две крупнейшие категории конкурентов автоматически выбывают из премиального сегмента. Nano Stone Glass соответствует требованиям <b>Класс А1 НГ</b> с проектной документации.</div>
+        </div>
+        <div class="gc-card seismic">
+          <div class="gc-tag">🌍 Game Changer #2</div>
+          <div class="gc-title">Алматы · 9-балльная сейсмика + 70–80 °C амплитуда</div>
+          <div class="gc-text">Уникальный рынок в мире: <b>9 баллов сейсмики</b> + температурные циклы день/ночь. Тяжёлый натуральный камень опасен (плиты-снаряды при толчках). Стандартные пористые материалы разрушаются от циклов заморозки. Nano Stone Glass: водопоглощение &lt;0,01% + класс сейсмостойкости <b>C2</b> + вес 43 кг/м² (vs 75 у гранита).</div>
+        </div>
+      </div>
+
+      <div class="sec-subtitle">Нормативные требования — для включения в СП РК и СНиП</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">Стратегия: включить в нормативные документы технические требования, соответствующие уникальным характеристикам продукции класса NSG — <em>без указания торгового наименования</em>. Технические барьеры для входа конкурентов создаются на уровне регуляторики.</div>
+      <table class="reg-tbl">
+        <thead>
+          <tr><th>Параметр</th><th>Требование</th><th>Обоснование</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Морозостойкость</td><td>≥ F300 циклов</td><td>Климат РК: до −40 °C</td></tr>
+          <tr><td>Водопоглощение</td><td>≤ 0,01%</td><td>Защита от разрушения при заморозке</td></tr>
+          <tr><td>Твёрдость (Mohs)</td><td>≥ 6,0</td><td>Износостойкость публичных зон</td></tr>
+          <tr><td>Долговечность</td><td>≥ 50 лет</td><td>Жизненный цикл госактива</td></tr>
+          <tr><td>Огнестойкость</td><td>Класс А1 (НГ)</td><td>Нормы пожарной безопасности РК (МЧС май 2025)</td></tr>
+          <tr><td>Сейсмостойкость</td><td>Класс С2</td><td>9-балльные зоны Казахстана (Алматы)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="reg-cols">
+        <div>
+          <div class="sec-subtitle">Ключевые партнёры по сертификации</div>
+          <div class="partners">
+            <div class="partner-card">
+              <strong>КазНИИСА</strong>
+              <span>Научное обоснование характеристик. Рекомендация = «входной билет» в крупные проекты. Включён в план с первого дня.</span>
+            </div>
+            <div class="partner-card">
+              <strong>Мининдустрии РК</strong>
+              <span>Лоббирование актуализации СП РК и СНиП — технические требования к материалам класса NSG.</span>
+            </div>
+            <div class="partner-card">
+              <strong>АО «НК "КТЖ"»</strong>
+              <span>Транспортная инфраструктура: вокзалы, тоннели, путепроводы. Заказчик инфраструктурных объектов.</span>
+            </div>
+            <div class="partner-card">
+              <strong>Акимат г. Алматы</strong>
+              <span>Программа городской реновации, реконструкция знаковых объектов, новое строительство в сейсмозоне.</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sec-subtitle">Каналы выхода на рынок (Go-to-Market)</div>
+          <div class="channels">
+            <div class="channel-card">
+              <strong>01 · Архитекторы и проектные институты</strong>
+              <span>КазНИИСА = «входной билет». Крупноформатные плиты 1200×2400 мм — то, чего не дают конкуренты. BIM-библиотеки.</span>
+            </div>
+            <div class="channel-card">
+              <strong>02 · Девелоперы и застройщики</strong>
+              <span>Пилотные проекты с демо-фасадом. <b>Alatau City</b> — флагманский партнёр. Шоу-рум с полноформатными образцами. TCO-калькулятор 50 лет.</span>
+            </div>
+            <div class="channel-card">
+              <strong>03 · Гос/квазигос заказы</strong>
+              <span>КТЖ — транспортная инфраструктура. Акимат Алматы — программа реновации. Нормативный путь через СП РК и СНиП. Сертификация КазНИИСА.</span>
+            </div>
+            <div class="channel-card">
+              <strong>04 · Демо «Лёд и Пламя»</strong>
+              <span>Охлаждение образца жидким азотом + нагрев открытым пламенем горелки. Лучшая визуализация надёжности для климата Алматы. Используется на всех ключевых встречах.</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -1096,6 +1272,125 @@ footer{
 
       </div>
     </div>
+
+  </div>
+</div>
+
+<!-- ============ TAB 4: PLANT GALLERY ============ -->
+<div id="t4" class="tab-pane">
+  <div style="margin-bottom:20px">
+    <div class="sec-title" style="border-bottom:none;margin-bottom:6px">Завод и применение материала <span class="sec-tag">RENDERS · 12 IMAGES</span></div>
+    <div style="font-size:13px;color:var(--text2);max-width:900px;line-height:1.55">Визуализация производственного процесса от подготовки сырья до готовых панелей, плюс примеры применения Nano Stone Glass на фасадах. Источник: проектная документация · rev6 апрель 2026.</div>
+  </div>
+  <div class="gallery-grid">
+
+    <figure class="render-card">
+      <img src="renders/01_factory_aerial.jpg" alt="Общий вид завода" loading="lazy">
+      <figcaption>
+        <div class="cap-num">01 · Общий план</div>
+        <div class="cap-title">Завод с высоты птичьего полёта</div>
+        <div class="cap-desc">Производственный корпус 300+ метров, склад готовой продукции, административный блок. Площадка ≥8 га с СЗЗ 500–1000 м.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/02_industrial_zone.jpg" alt="Размещение в индустриальной зоне" loading="lazy">
+      <figcaption>
+        <div class="cap-num">02 · Локация</div>
+        <div class="cap-title">Размещение в индустриальной зоне</div>
+        <div class="cap-desc">Контекст размещения рядом с городской инфраструктурой — доступ к ж/д, дорогам и инженерным сетям.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/03_raw_materials_yard.jpg" alt="Зона подготовки сырья" loading="lazy">
+      <figcaption>
+        <div class="cap-num">03 · Стадия 1</div>
+        <div class="cap-title">Зона подготовки сырья</div>
+        <div class="cap-desc">Стрейджи доломита, полевого шпата, кварцевого песка. Магнитный сепаратор (Fe removal). Колёсный погрузчик для перевалки.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/04_mixing_line.jpg" alt="Линия дозирования и смешивания" loading="lazy">
+      <figcaption>
+        <div class="cap-num">04 · Стадия 2</div>
+        <div class="cap-title">Линия дозирования и смешивания</div>
+        <div class="cap-desc">Силосы SiO₂ и минерального сырья. Автоматическая подача в шихтоприготовительный узел. Контроль рецептуры через SCADA.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/05_melting_furnace.jpg" alt="Плавильная печь" loading="lazy">
+      <figcaption>
+        <div class="cap-num">05 · Стадия 3</div>
+        <div class="cap-title">Плавильная печь, 1 450 °C</div>
+        <div class="cap-desc">Непрерывный режим 24/7. Ёмкость 66 м². AZS-кирпич футеровки. Остановка = разрушение футеровки и потеря печи.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/06_rolling_line.jpg" alt="Прокатка стеклокомпозита" loading="lazy">
+      <figcaption>
+        <div class="cap-num">06 · Стадия 4</div>
+        <div class="cap-title">Прокатка раскалённого стеклокомпозита</div>
+        <div class="cap-desc">Метод float-формования. Формирование непрерывной ленты толщиной 12–35 мм. Калибровка валками.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/07_melt_pouring.jpg" alt="Подача расплава" loading="lazy">
+      <figcaption>
+        <div class="cap-num">07 · Стадия 4 · деталь</div>
+        <div class="cap-title">Подача расплава на формовочный стол</div>
+        <div class="cap-desc">Непрерывная разливка расплава обеспечивает равномерную толщину плиты по всей длине ленты.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/08_roller_kiln.jpg" alt="Печь кристаллизации Roller Kiln" loading="lazy">
+      <figcaption>
+        <div class="cap-num">08 · Стадия 5</div>
+        <div class="cap-title">Печь кристаллизации Roller Kiln, 250–300 м</div>
+        <div class="cap-desc">Контролируемое охлаждение и направленная кристаллизация при 1 150 °C. Формирует наноструктуру материала.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/09_cutting_packaging.jpg" alt="Линия резки и упаковки" loading="lazy">
+      <figcaption>
+        <div class="cap-num">09 · Стадия 6</div>
+        <div class="cap-title">Линия резки, полировки и упаковки</div>
+        <div class="cap-desc">ЧПУ-станки, вакуумные манипуляторы. Готовые плиты формата 3000×1600 мм и 2800×1600 мм. Упаковка в А-рамы.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/10_logistics.jpg" alt="Грузовая инфраструктура" loading="lazy">
+      <figcaption>
+        <div class="cap-num">10 · Логистика</div>
+        <div class="cap-title">Грузовая инфраструктура</div>
+        <div class="cap-desc">Ж/д подъездная ветка, контейнерный склад, площадка готовой продукции. Отгрузка в Алматы, Астану и на экспорт (Узбекистан, Азербайджан).</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/11_facade_application.jpg" alt="Применение на фасаде" loading="lazy">
+      <figcaption>
+        <div class="cap-num">11 · Применение</div>
+        <div class="cap-title">Фасад здания + микроструктура</div>
+        <div class="cap-desc">Вентилируемый фасад жилого комплекса из Nano Stone Glass. Справа — нанокристаллическая решётка материала под микроскопом.</div>
+      </figcaption>
+    </figure>
+
+    <figure class="render-card">
+      <img src="renders/12_material_comparison.jpg" alt="Сравнение материалов" loading="lazy">
+      <figcaption>
+        <div class="cap-num">12 · Сравнение</div>
+        <div class="cap-title">Nano Stone vs гранит + проект «Алматы Modern Façade»</div>
+        <div class="cap-desc">Слева — сравнение поверхностей: NSG (зеркальная, без пор) vs пористый гранит (микротрещины). Справа — проект применения в Алматы, крупный формат 1200×2400 мм.</div>
+      </figcaption>
+    </figure>
 
   </div>
 </div>
