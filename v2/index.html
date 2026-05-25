@@ -626,7 +626,6 @@ input[type=range]::-moz-range-thumb{
 .ch-tall{height:280px;position:relative}
 .ch-med{height:240px;position:relative}
 .ch-donut{height:280px;position:relative}
-.ch-tornado{height:320px;position:relative}
 
 /* Small Multiples for P&L slot */
 .sm-grid-fm{
@@ -1075,9 +1074,24 @@ footer{
         </div>
 
         <div class="chart-box m-sens">
-          <h4>Чувствительность NPV — что движет результат <span class="ch-tag">Tornado · ±20% / ±200bps по каждому драйверу</span></h4>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Длина бара = размах NPV при изменении драйвера. Зелёный — направление улучшения, красный — ухудшения. Драйверы отсортированы по силе влияния.</div>
-          <div class="ch-tornado"><canvas id="tornadoChart"></canvas></div>
+          <h4>Анализ чувствительности — цена продажи vs показатели <span class="ch-tag">SENSITIVITY</span></h4>
+          <div style="font-family:var(--font-body);font-size:11px;color:var(--text3);margin-bottom:12px">При текущих настройках мощности, горизонта и режима СЭЗ. Выделена текущая цена.</div>
+          <div class="sens-wrap">
+            <table class="sens-tbl" id="sens-tbl">
+              <thead>
+                <tr>
+                  <th>Цена /м²</th>
+                  <th>Выручка Г1</th>
+                  <th>Чист. приб Г1</th>
+                  <th id="sens-hd-rev">Выручка Г5</th>
+                  <th id="sens-hd-ni">Чист. приб Г5</th>
+                  <th>NPV</th>
+                  <th>IRR</th>
+                </tr>
+              </thead>
+              <tbody id="sens-body"></tbody>
+            </table>
+          </div>
         </div>
 
       </div>
@@ -1210,7 +1224,6 @@ let chartsReady = false;
 let smRevChart, smEbiChart, smNiChart;     // P&L small multiples
 let fcfEChart;                             // FCF conditional area (ECharts)
 let opexChart;                             // OPEX horizontal bar ranked
-let tornadoChart;                          // Sensitivity tornado
 
 // Register Chart.js plugin
 if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
@@ -1269,7 +1282,7 @@ function update() {
     S.cap === 1200 ? '438 000 м²/год · $32.4M CAPEX' : '620 500 м²/год · $38.4M CAPEX';
 
   if (chartsReady) updateCharts(m);
-  updateTornado();
+  updateSensTable(m);
 }
 
 function setKPIClass(id, pos) {
@@ -1310,9 +1323,6 @@ function initCharts() {
 
   // ---- OPEX Horizontal Bar Ranked (Chart.js) ----
   opexChart = new Chart(document.getElementById('opexChart'), buildOPEXConfig(m));
-
-  // ---- Tornado (Chart.js horizontal floating bars) ----
-  tornadoChart = new Chart(document.getElementById('tornadoChart'), buildTornadoConfig(buildTornadoData()));
 
   chartsReady = true;
   updateCharts(m);
@@ -1487,110 +1497,45 @@ function buildOPEXConfig(m) {
   };
 }
 
-// ---- Tornado data builder (live recompute) ----
-function computeWithOverrides(overrides) {
-  const cap = overrides.cap ?? S.cap;
-  const price = overrides.price ?? S.price;
-  const horizon = overrides.horizon ?? S.horizon;
-  const sez = overrides.sez ?? S.sez;
-  const orig = {WACC:M.WACC, INFL:M.INFL, varM2:M.varM2, fixBase:M.fixBase,
-                cx12:M.capex[1200], cx17:M.capex[1700]};
-  if (overrides.wacc !== undefined) M.WACC = overrides.wacc;
-  if (overrides.infl !== undefined) M.INFL = overrides.infl;
-  if (overrides.opexMult !== undefined) {
-    M.varM2 = orig.varM2 * overrides.opexMult;
-    M.fixBase = orig.fixBase * overrides.opexMult;
-  }
-  if (overrides.capexMult !== undefined) {
-    M.capex[1200] = orig.cx12 * overrides.capexMult;
-    M.capex[1700] = orig.cx17 * overrides.capexMult;
-  }
-  const r = computeModel(cap, price, horizon, sez);
-  // Restore
-  M.WACC = orig.WACC; M.INFL = orig.INFL;
-  M.varM2 = orig.varM2; M.fixBase = orig.fixBase;
-  M.capex[1200] = orig.cx12; M.capex[1700] = orig.cx17;
-  return r;
-}
+// ---- Sensitivity table (price × metrics) ----
+function updateSensTable(m) {
+  const H = S.horizon;
+  document.getElementById('sens-hd-rev').textContent = 'Выручка Г' + H;
+  document.getElementById('sens-hd-ni').textContent  = 'Чист. приб Г' + H;
+  const tbody = document.getElementById('sens-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
 
-function buildTornadoData() {
-  const base = computeModel(S.cap, S.price, S.horizon, S.sez).npv / 1e6;
-  const drivers = [
-    {name:'Цена ±20%',     low: computeWithOverrides({price: S.price*0.8}).npv/1e6,
-                          high: computeWithOverrides({price: S.price*1.2}).npv/1e6},
-    {name:'OPEX ±20%',     low: computeWithOverrides({opexMult: 1.2}).npv/1e6,
-                          high: computeWithOverrides({opexMult: 0.8}).npv/1e6},
-    {name:'CAPEX ±20%',    low: computeWithOverrides({capexMult: 1.2}).npv/1e6,
-                          high: computeWithOverrides({capexMult: 0.8}).npv/1e6},
-    {name:'WACC ±200bps',  low: computeWithOverrides({wacc: M.WACC + 0.02}).npv/1e6,
-                          high: computeWithOverrides({wacc: M.WACC - 0.02}).npv/1e6},
-    {name:'СЭЗ (0%↔20%)', low: computeWithOverrides({sez: false}).npv/1e6,
-                          high: computeWithOverrides({sez: true}).npv/1e6},
-    {name:'Инфляция ±2pp', low: computeWithOverrides({infl: Math.max(0, M.INFL - 0.02)}).npv/1e6,
-                          high: computeWithOverrides({infl: M.INFL + 0.02}).npv/1e6},
-  ];
-  // Normalize low<high
-  drivers.forEach(d => { if (d.low > d.high) { const t=d.low; d.low=d.high; d.high=t; } });
-  // Sort by swing desc
-  drivers.sort((a,b)=>(b.high-b.low)-(a.high-a.low));
-  return {base, drivers};
-}
+  M.PRICES.forEach(p => {
+    const mm  = computeModel(S.cap, p, H, S.sez);
+    const yr1 = mm.rows[0];
+    const yrH = mm.rows[H - 1];
+    const isActive = p === S.price;
 
-function buildTornadoConfig(td) {
-  return {
-    type:'bar',
-    data:{
-      labels: td.drivers.map(d=>d.name),
-      datasets:[{
-        label:'NPV swing',
-        data: td.drivers.map(d=>[d.low, d.high]),
-        backgroundColor: td.drivers.map(d=>{
-          const lowDist = Math.abs(td.base - d.low);
-          const highDist = Math.abs(d.high - td.base);
-          return highDist > lowDist ? 'rgba(16,185,129,.65)' : 'rgba(244,63,94,.65)';
-        }),
-        borderColor: td.drivers.map(d=>{
-          const lowDist = Math.abs(td.base - d.low);
-          const highDist = Math.abs(d.high - td.base);
-          return highDist > lowDist ? '#10b981' : '#f43f5e';
-        }),
-        borderWidth:1, borderRadius:3,
-      }]
-    },
-    options:{
-      indexAxis:'y',
-      responsive:true, maintainAspectRatio:false,
-      animation:{duration:600, easing:'easeOutCubic'},
-      plugins:{
-        legend:{display:false},
-        datalabels:{display:false},
-        tooltip:{
-          backgroundColor:COLORS.tooltipBg, borderColor:COLORS.tooltipBorder, borderWidth:1,
-          bodyFont:CHART_FONT, padding:10,
-          callbacks:{
-            label:c=>{
-              const d = td.drivers[c.dataIndex];
-              return ['Low:  $'+d.low.toFixed(1)+'M', 'High: $'+d.high.toFixed(1)+'M',
-                      'Swing: $'+(d.high-d.low).toFixed(1)+'M'];
-            }
-          }
-        },
-        annotation:{
-          annotations:{
-            base:{type:'line', xMin:td.base, xMax:td.base,
-              borderColor:'#f59e0b', borderWidth:2,
-              label:{display:true, content:'Base NPV $'+td.base.toFixed(1)+'M', position:'start',
-                backgroundColor:'rgba(245,158,11,.2)', color:'#f59e0b',
-                font:{family:'IBM Plex Mono',size:10,weight:600}, padding:5, borderRadius:3, yAdjust:-145}}
-          }
-        }
-      },
-      scales:{
-        x:{ticks:{color:COLORS.axis,font:CHART_FONT,callback:v=>'$'+v+'M'},grid:{color:COLORS.grid}},
-        y:{ticks:{color:'#e2e8f0',font:{family:'Inter',size:11}},grid:{display:false}}
-      }
-    }
-  };
+    let npvCls = 'npv-f';
+    if (mm.npv > 30e6) npvCls = 'npv-a';
+    else if (mm.npv > 0) npvCls = 'npv-b';
+    else if (mm.npv > -5e6) npvCls = 'npv-z';
+    else if (mm.npv > -30e6) npvCls = 'npv-d';
+
+    const tr = document.createElement('tr');
+    if (isActive) tr.className = 's-active';
+
+    const ni1Pos = yr1.ni >= 0 ? 'color:#10b981' : 'color:#f43f5e';
+    const niHPos = yrH.ni >= 0 ? 'color:#10b981' : 'color:#f43f5e';
+    const irrStr = mm.irr ? (mm.irr * 100).toFixed(1) + '%' : '<14%';
+
+    tr.innerHTML = `
+      <td>$${p}/м²</td>
+      <td>$${f1(yr1.rev)}M</td>
+      <td style="${ni1Pos}">$${f1(yr1.ni)}M</td>
+      <td>$${f1(yrH.rev)}M</td>
+      <td style="${niHPos}">$${f1(yrH.ni)}M</td>
+      <td class="${npvCls}">$${f1(mm.npv)}M</td>
+      <td class="${npvCls}">${irrStr}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 function updateCharts(m) {
@@ -1619,14 +1564,6 @@ function updateCharts(m) {
   opexChart.update('none');
 }
 
-function updateTornado() {
-  if (!tornadoChart) return;
-  const td = buildTornadoData();
-  const cfg = buildTornadoConfig(td);
-  tornadoChart.data = cfg.data;
-  tornadoChart.options = cfg.options;
-  tornadoChart.update('none');
-}
 
 // ============================================================
 //  CONTROL HANDLERS
