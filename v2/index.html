@@ -10,6 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 
 <style>
 :root{
@@ -622,7 +625,45 @@ input[type=range]::-moz-range-thumb{
 }
 .ch-tall{height:280px;position:relative}
 .ch-med{height:240px;position:relative}
-.ch-donut{height:240px;position:relative;max-width:300px;margin:0 auto}
+.ch-donut{height:280px;position:relative}
+.ch-tornado{height:320px;position:relative}
+
+/* Small Multiples for P&L slot */
+.sm-grid-fm{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  height:260px;
+}
+@media(max-width:700px){.sm-grid-fm{grid-template-columns:1fr;height:auto}}
+.sm-cell-fm{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 10px 8px;
+  display:flex;flex-direction:column;
+  transition:all .2s;
+}
+.sm-cell-fm:hover{border-color:var(--border2);transform:translateY(-2px)}
+.sm-label-fm{
+  font-family:var(--font-mono);
+  font-size:10px;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.1em;
+  text-align:center;font-weight:600;margin-bottom:4px;
+}
+.sm-val-fm{
+  font-family:var(--font-display);
+  font-size:24px;font-weight:700;
+  text-align:center;letter-spacing:.005em;
+  margin-bottom:8px;line-height:1;
+}
+.sm-val-fm.rev{color:var(--indigo)}
+.sm-val-fm.ebi{color:var(--amber)}
+.sm-val-fm.ni{color:var(--positive)}
+.sm-canvas-fm{flex:1;position:relative;min-height:0;margin:0 -2px}
+.sm-foot-fm{
+  font-family:var(--font-mono);font-size:10px;
+  text-align:center;color:var(--positive);
+  margin-top:6px;letter-spacing:.04em;font-weight:600;
+}
 .maint-note{
   font-family:var(--font-mono);
   font-size:9.5px;color:var(--warn);
@@ -999,40 +1040,44 @@ footer{
       <div class="model-bento">
 
         <div class="chart-box m-pl">
-          <h4>P&amp;L — Выручка / EBITDA / Чистая прибыль по годам <span class="ch-tag">Chart.js · custom theme</span></h4>
-          <div class="ch-tall"><canvas id="plChart"></canvas></div>
+          <h4>P&amp;L — три двигателя проекта <span class="ch-tag">Small Multiples · Chart.js × 3 + CAGR</span></h4>
+          <div class="sm-grid-fm">
+            <div class="sm-cell-fm">
+              <div class="sm-label-fm">Выручка</div>
+              <div class="sm-val-fm rev" id="sm-rev-val">—</div>
+              <div class="sm-canvas-fm"><canvas id="sm-rev"></canvas></div>
+              <div class="sm-foot-fm" id="sm-rev-cagr">—</div>
+            </div>
+            <div class="sm-cell-fm">
+              <div class="sm-label-fm">EBITDA</div>
+              <div class="sm-val-fm ebi" id="sm-ebi-val">—</div>
+              <div class="sm-canvas-fm"><canvas id="sm-ebi"></canvas></div>
+              <div class="sm-foot-fm" id="sm-ebi-cagr">—</div>
+            </div>
+            <div class="sm-cell-fm">
+              <div class="sm-label-fm">Чист. прибыль</div>
+              <div class="sm-val-fm ni" id="sm-ni-val">—</div>
+              <div class="sm-canvas-fm"><canvas id="sm-ni"></canvas></div>
+              <div class="sm-foot-fm" id="sm-ni-cagr">—</div>
+            </div>
+          </div>
           <div class="maint-note" id="maint-note" style="display:none">* Год 6 — плановый капитальный ремонт (11 месяцев работы)</div>
         </div>
 
         <div class="chart-box m-fcf">
-          <h4>Кумулятивный дисконтированный FCF <span class="ch-tag">DCF</span></h4>
-          <div class="ch-med"><canvas id="fcfChart"></canvas></div>
+          <h4>Кумулятивный дисконтированный FCF <span class="ch-tag">Conditional Area · ECharts (red→amber→emerald)</span></h4>
+          <div class="ch-med" id="fcfChart"></div>
         </div>
 
         <div class="chart-box m-don">
-          <h4>Структура OPEX <span class="ch-tag">8 категорий</span></h4>
-          <div class="ch-donut"><canvas id="donutChart"></canvas></div>
+          <h4>Структура OPEX <span class="ch-tag">Ranked · Chart.js + datalabels</span></h4>
+          <div class="ch-donut"><canvas id="opexChart"></canvas></div>
         </div>
 
         <div class="chart-box m-sens">
-          <h4>Анализ чувствительности — цена продажи vs показатели <span class="ch-tag">SENSITIVITY</span></h4>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:12px">При текущих настройках мощности, горизонта и режима СЭЗ. Выделена текущая цена.</div>
-          <div class="sens-wrap">
-            <table class="sens-tbl" id="sens-tbl">
-              <thead>
-                <tr>
-                  <th>Цена /м²</th>
-                  <th>Выручка Г1</th>
-                  <th>Чист. приб Г1</th>
-                  <th id="sens-hd-rev">Выручка Г5</th>
-                  <th id="sens-hd-ni">Чист. приб Г5</th>
-                  <th>NPV</th>
-                  <th>IRR</th>
-                </tr>
-              </thead>
-              <tbody id="sens-body"></tbody>
-            </table>
-          </div>
+          <h4>Чувствительность NPV — что движет результат <span class="ch-tag">Tornado · ±20% / ±200bps по каждому драйверу</span></h4>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Длина бара = размах NPV при изменении драйвера. Зелёный — направление улучшения, красный — ухудшения. Драйверы отсортированы по силе влияния.</div>
+          <div class="ch-tornado"><canvas id="tornadoChart"></canvas></div>
         </div>
 
       </div>
@@ -1162,7 +1207,13 @@ function animateValue(el, target, fmt, duration = 700) {
 //  UI UPDATE
 // ============================================================
 let chartsReady = false;
-let plChart, fcfChart, donutChart;
+let smRevChart, smEbiChart, smNiChart;     // P&L small multiples
+let fcfEChart;                             // FCF conditional area (ECharts)
+let opexChart;                             // OPEX horizontal bar ranked
+let tornadoChart;                          // Sensitivity tornado
+
+// Register Chart.js plugin
+if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
 
 function update() {
   const m = computeModel(S.cap, S.price, S.horizon, S.sez);
@@ -1218,7 +1269,7 @@ function update() {
     S.cap === 1200 ? '438 000 м²/год · $32.4M CAPEX' : '620 500 м²/год · $38.4M CAPEX';
 
   if (chartsReady) updateCharts(m);
-  updateSensTable(m);
+  updateTornado();
 }
 
 function setKPIClass(id, pos) {
@@ -1232,215 +1283,349 @@ function setKPIClass(id, pos) {
 // ============================================================
 const CHART_FONT = {family:'IBM Plex Mono',size:10.5};
 const COLORS = {
-  rev:     'rgba(99,102,241,.6)',    // indigo
-  revLine: '#6366f1',
-  ebitda:  'rgba(245,158,11,.65)',   // amber
-  ebitdaL: '#f59e0b',
-  ni:      'rgba(16,185,129,.65)',
-  niLine:  '#10b981',
-  niNeg:   'rgba(244,63,94,.6)',
-  cum:     '#f59e0b',
-  capLine: 'rgba(244,63,94,.55)',
-  maint:   'rgba(99,102,241,.22)',
-  grid:    'rgba(30,44,74,.6)',
+  rev:     '#6366f1',
+  ebi:     '#f59e0b',
+  ni:      '#10b981',
+  neg:     '#f43f5e',
+  warn:    '#fbbf24',
+  grid:    'rgba(30,44,74,.55)',
   axis:    '#64748b',
+  tooltipBg:'#0e1a35',
+  tooltipBorder:'#1e2c4a',
 };
-const DONUT_COLORS = ['#f59e0b','#6366f1','#10b981','#a78bfa','#fbbf24','#94a3b8','#ec4899','#06b6d4'];
-const DONUT_LABELS = ['Сырьё','Персонал','Обслуживание','Логистика','Газ','Администрация','Прочее','Электро'];
+const OPEX_LABELS = ['Сырьё','Персонал','Обслуживание','Логистика','Газ','Прочее','Администрация','Электро','Вода'];
+const OPEX_PALETTE = ['#f59e0b','#6366f1','#10b981','#a78bfa','#fbbf24','#94a3b8','#ec4899','#06b6d4','#475569'];
 
 function initCharts() {
   const m = computeModel(S.cap, S.price, S.horizon, S.sez);
 
-  plChart = new Chart(document.getElementById('plChart'), {
-    type: 'bar',
-    data: buildPLData(m),
-    options: {
-      responsive:true,maintainAspectRatio:false,
-      animation:{duration:600,easing:'easeOutCubic'},
-      plugins:{
-        legend:{labels:{color:'#94a3b8',font:CHART_FONT,boxWidth:14,padding:14}},
-        tooltip:{
-          backgroundColor:'#0e1a35',borderColor:'#1e2c4a',borderWidth:1,
-          titleColor:'#e2e8f0',bodyColor:'#cbd5e1',
-          titleFont:{family:'IBM Plex Mono',size:11},bodyFont:CHART_FONT,
-          padding:10,boxPadding:6,
-          callbacks:{label:c=>' '+c.dataset.label+': $'+(c.raw/1e6).toFixed(2)+'M'}
-        }
-      },
-      scales:{
-        x:{ticks:{color:COLORS.axis,font:CHART_FONT},grid:{color:COLORS.grid}},
-        y:{ticks:{color:COLORS.axis,font:CHART_FONT,callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:COLORS.grid}}
-      }
-    }
-  });
+  // ---- Small Multiples: Revenue / EBITDA / NI ----
+  smRevChart = createSm('sm-rev', m.rows.map(r=>r.rev/1e6), '#6366f1');
+  smEbiChart = createSm('sm-ebi', m.rows.map(r=>r.ebitda/1e6), '#f59e0b');
+  smNiChart  = createSm('sm-ni',  m.rows.map(r=>r.ni/1e6), '#10b981');
 
-  fcfChart = new Chart(document.getElementById('fcfChart'), {
-    type:'line',
-    data:buildFCFData(m),
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      animation:{duration:600,easing:'easeOutCubic'},
-      plugins:{
-        legend:{labels:{color:'#94a3b8',font:CHART_FONT,boxWidth:14,padding:12}},
-        tooltip:{
-          backgroundColor:'#0e1a35',borderColor:'#1e2c4a',borderWidth:1,
-          titleColor:'#e2e8f0',bodyColor:'#cbd5e1',
-          titleFont:{family:'IBM Plex Mono',size:11},bodyFont:CHART_FONT,
-          padding:10,boxPadding:6,
-          callbacks:{label:c=>' $'+(c.raw/1e6).toFixed(2)+'M'}
-        }
-      },
-      scales:{
-        x:{ticks:{color:COLORS.axis,font:CHART_FONT},grid:{color:COLORS.grid}},
-        y:{ticks:{color:COLORS.axis,font:CHART_FONT,callback:v=>'$'+(v/1e6).toFixed(0)+'M'},grid:{color:COLORS.grid}}
-      }
-    }
-  });
+  // ---- FCF Conditional Area (ECharts) ----
+  fcfEChart = echarts.init(document.getElementById('fcfChart'), null, {renderer:'canvas'});
+  fcfEChart.setOption(buildFCFOption(m));
 
-  donutChart = new Chart(document.getElementById('donutChart'), {
-    type:'doughnut',
-    data:buildDonutData(m),
-    options:{
-      responsive:true,maintainAspectRatio:false,cutout:'64%',
-      animation:{animateRotate:true,animateScale:false,duration:800,easing:'easeOutCubic'},
-      plugins:{
-        legend:{position:'bottom',labels:{color:'#94a3b8',font:{family:'IBM Plex Mono',size:9.5},boxWidth:10,padding:8}},
-        tooltip:{
-          backgroundColor:'#0e1a35',borderColor:'#1e2c4a',borderWidth:1,
-          titleColor:'#e2e8f0',bodyColor:'#cbd5e1',
-          titleFont:{family:'IBM Plex Mono',size:11},bodyFont:CHART_FONT,
-          padding:10,boxPadding:6,
-          callbacks:{label:c=>' $'+(c.raw/1e6).toFixed(2)+'M ('+(c.raw/m.annOpex*100).toFixed(0)+'%)'}
-        }
-      }
-    }
-  });
+  // ---- OPEX Horizontal Bar Ranked (Chart.js) ----
+  opexChart = new Chart(document.getElementById('opexChart'), buildOPEXConfig(m));
+
+  // ---- Tornado (Chart.js horizontal floating bars) ----
+  tornadoChart = new Chart(document.getElementById('tornadoChart'), buildTornadoConfig(buildTornadoData()));
 
   chartsReady = true;
   updateCharts(m);
 }
 
-function buildPLData(m) {
-  const labels = m.rows.map(r => 'Год ' + r.y + (r.isMaint ? '*' : ''));
-  return {
-    labels,
-    datasets:[
-      {label:'Выручка',data:m.rows.map(r=>r.rev),
-       backgroundColor:m.rows.map(r=>r.isMaint?COLORS.maint:COLORS.rev),
-       borderColor:COLORS.revLine,borderWidth:1,borderRadius:4,borderSkipped:false},
-      {label:'EBITDA',data:m.rows.map(r=>r.ebitda),
-       backgroundColor:m.rows.map(r=>r.isMaint?'rgba(245,158,11,.20)':COLORS.ebitda),
-       borderColor:COLORS.ebitdaL,borderWidth:1,borderRadius:4,borderSkipped:false},
-      {label:'Чист. прибыль',data:m.rows.map(r=>r.ni),
-       backgroundColor:m.rows.map(r=>r.ni>=0?(r.isMaint?'rgba(16,185,129,.25)':COLORS.ni):COLORS.niNeg),
-       borderColor:m.rows.map(r=>r.ni>=0?COLORS.niLine:'#f43f5e'),borderWidth:1,borderRadius:4,borderSkipped:false}
-    ]
-  };
+// ---- Small multiple helper ----
+function createSm(canvasId, data, colorHex) {
+  return new Chart(document.getElementById(canvasId), {
+    type:'bar',
+    data:{
+      labels: data.map((_,i)=>'Y'+(i+1)),
+      datasets:[{
+        data: data,
+        backgroundColor: colorHex + 'b3',
+        borderColor: colorHex,
+        borderWidth: 0.5,
+        borderRadius: 2,
+        barPercentage: 0.7,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:500,easing:'easeOutCubic'},
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{
+          backgroundColor:COLORS.tooltipBg, borderColor:COLORS.tooltipBorder, borderWidth:1,
+          bodyFont:{family:'IBM Plex Mono',size:10}, padding:6, displayColors:false,
+          callbacks:{label:c=>'$'+c.raw.toFixed(2)+'M'}
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#64748b',font:{family:'IBM Plex Mono',size:8.5}},grid:{display:false}},
+        y:{display:false, beginAtZero:true}
+      }
+    }
+  });
 }
 
-function buildFCFData(m) {
+function updateSm(chart, data) {
+  if (!chart) return;
+  chart.data.labels = data.map((_,i)=>'Y'+(i+1));
+  chart.data.datasets[0].data = data;
+  chart.update('none');
+}
+
+function cagrLabel(arr) {
+  if (arr.length < 2 || arr[0] <= 0) return '—';
+  const cagr = Math.pow(arr[arr.length-1] / arr[0], 1/(arr.length-1)) - 1;
+  return (cagr>=0?'+':'') + (cagr*100).toFixed(1) + '% CAGR';
+}
+
+// ---- FCF Conditional Area (ECharts option) ----
+function buildFCFOption(m) {
   const labels = ['Год 0'];
-  const cumVals = [m.cfs[0]];
-  let cum = m.cfs[0];
-  for (let i = 1; i < m.cfs.length; i++) {
-    cum += m.cfs[i] / (1 + M.WACC) ** i;
-    labels.push('Год ' + i);
-    cumVals.push(cum);
+  const cum = [m.cfs[0] / 1e6];
+  let acc = m.cfs[0];
+  for (let i=1; i<m.cfs.length; i++) {
+    acc += m.cfs[i] / (1+M.WACC)**i;
+    labels.push('Год '+i);
+    cum.push(acc / 1e6);
   }
-  const zero = labels.map(()=>0);
+  const finalNpv = cum[cum.length-1];
+  const minVal = Math.min(...cum);
+  const maxVal = Math.max(...cum, 1);
+
   return {
-    labels,
-    datasets:[
-      {label:'Кум. диск. FCF',data:cumVals,type:'line',
-       borderColor:COLORS.cum,backgroundColor:'rgba(245,158,11,.10)',
-       pointBackgroundColor:COLORS.cum,pointRadius:4,pointHoverRadius:6,
-       tension:0.35,fill:true,borderWidth:2.4},
-      {label:'Точка безубыточности',data:zero,type:'line',
-       borderColor:COLORS.capLine,borderDash:[6,4],
-       pointRadius:0,fill:false,borderWidth:1.5}
-    ]
+    backgroundColor:'transparent',
+    grid:{left:50, right:14, top:24, bottom:32},
+    tooltip:{
+      trigger:'axis', axisPointer:{type:'cross',crossStyle:{color:'#94a3b8'}},
+      backgroundColor:COLORS.tooltipBg, borderColor:COLORS.tooltipBorder, borderWidth:1,
+      textStyle:{color:'#e2e8f0',fontFamily:'IBM Plex Mono',fontSize:10.5},
+      valueFormatter:v=>(v>=0?'+':'')+'$'+v.toFixed(2)+'M'
+    },
+    xAxis:{
+      type:'category', data:labels, boundaryGap:false,
+      axisLine:{lineStyle:{color:COLORS.grid}},
+      axisTick:{show:false},
+      axisLabel:{color:COLORS.axis,fontFamily:'IBM Plex Mono',fontSize:10}
+    },
+    yAxis:{
+      type:'value',
+      axisLine:{show:false}, splitLine:{lineStyle:{color:COLORS.grid}},
+      axisLabel:{color:COLORS.axis,fontFamily:'IBM Plex Mono',fontSize:10,formatter:'${value}M'}
+    },
+    visualMap:{
+      show:false, type:'continuous',
+      min:minVal, max:maxVal,
+      inRange:{color:['#f43f5e','#fbbf24','#10b981']},
+      dimension:1, seriesIndex:0
+    },
+    series:[{
+      name:'Кум. диск. FCF',
+      type:'line', smooth:true,
+      symbol:'circle', symbolSize:7,
+      data: cum,
+      lineStyle:{width:3},
+      areaStyle:{opacity:0.32},
+      markLine:{
+        symbol:'none', silent:true,
+        data:[{yAxis:0,
+          lineStyle:{color:'#94a3b8',type:'dashed',width:1},
+          label:{formatter:'Break-even',color:'#94a3b8',fontFamily:'IBM Plex Mono',fontSize:9.5,position:'end'}}]
+      },
+      markPoint:{
+        symbol:'pin', symbolSize:38,
+        data:[{name:'NPV', coord:['Год '+(cum.length-1), finalNpv],
+          itemStyle:{color: finalNpv>=0?'#10b981':'#f43f5e'},
+          label:{formatter:'NPV '+(finalNpv>=0?'+':'')+'$'+finalNpv.toFixed(1)+'M',
+            color:'#fff',fontFamily:'IBM Plex Mono',fontSize:9,fontWeight:600}}]
+      },
+      animationDuration:600
+    }]
   };
 }
 
-function buildDonutData(m) {
+// ---- OPEX Horizontal Bar Ranked (Chart.js config) ----
+function buildOPEXConfig(m) {
   const prod = M.cap[S.cap];
   const capex = M.capex[S.cap];
-  const vals = [
-    M.rawM2  * prod,                            // raw materials
-    M.fixBase - 750000 - 1000000,                // personnel
-    capex * M.MAINT,                            // maintenance
-    M.logM2  * prod,                            // logistics
-    M.gasM2  * prod,                            // gas
-    750000,                                     // admin
-    1000000 + M.waterM2 * prod,                 // other
-    M.elecM2 * prod                             // electricity
+  const items = [
+    {name:'Сырьё',         value: M.rawM2 * prod},
+    {name:'Персонал',      value: 1761592},
+    {name:'Обслуживание',  value: capex * M.MAINT},
+    {name:'Логистика',     value: M.logM2 * prod},
+    {name:'Газ',           value: M.gasM2 * prod},
+    {name:'Прочее',        value: 1000000},
+    {name:'Администрация', value: 750000},
+    {name:'Электро',       value: M.elecM2 * prod},
+    {name:'Вода',          value: M.waterM2 * prod},
   ];
+  const total = items.reduce((s,o)=>s+o.value, 0);
+  const sorted = [...items].sort((a,b)=>b.value-a.value);
+
   return {
-    labels:DONUT_LABELS,
-    datasets:[{data:vals,backgroundColor:DONUT_COLORS,borderColor:'#050b1a',borderWidth:2}]
+    type:'bar',
+    data:{
+      labels: sorted.map(o=>o.name),
+      datasets:[{
+        label:'OPEX',
+        data: sorted.map(o=>o.value/1e6),
+        backgroundColor: sorted.map((o,i)=>i===0?'#f59e0b':'rgba(99,102,241,.55)'),
+        borderColor: sorted.map((o,i)=>i===0?'#f59e0b':'#6366f1'),
+        borderWidth:1, borderRadius:4,
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:600,easing:'easeOutCubic'},
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          color:'#e2e8f0', anchor:'end', align:'end', offset:6,
+          font:{family:'IBM Plex Mono',size:10,weight:600},
+          formatter:(v)=>'$'+v.toFixed(2)+'M ('+(v*1e6/total*100).toFixed(0)+'%)'
+        },
+        tooltip:{
+          backgroundColor:COLORS.tooltipBg, borderColor:COLORS.tooltipBorder, borderWidth:1,
+          bodyFont:CHART_FONT, padding:10,
+          callbacks:{label:c=>' $'+c.raw.toFixed(2)+'M ('+(c.raw*1e6/total*100).toFixed(1)+'%)'}
+        }
+      },
+      layout:{padding:{right:120}},
+      scales:{
+        x:{display:false, beginAtZero:true},
+        y:{ticks:{color:'#e2e8f0',font:{family:'Inter',size:11}},grid:{display:false}}
+      }
+    }
+  };
+}
+
+// ---- Tornado data builder (live recompute) ----
+function computeWithOverrides(overrides) {
+  const cap = overrides.cap ?? S.cap;
+  const price = overrides.price ?? S.price;
+  const horizon = overrides.horizon ?? S.horizon;
+  const sez = overrides.sez ?? S.sez;
+  const orig = {WACC:M.WACC, INFL:M.INFL, varM2:M.varM2, fixBase:M.fixBase,
+                cx12:M.capex[1200], cx17:M.capex[1700]};
+  if (overrides.wacc !== undefined) M.WACC = overrides.wacc;
+  if (overrides.infl !== undefined) M.INFL = overrides.infl;
+  if (overrides.opexMult !== undefined) {
+    M.varM2 = orig.varM2 * overrides.opexMult;
+    M.fixBase = orig.fixBase * overrides.opexMult;
+  }
+  if (overrides.capexMult !== undefined) {
+    M.capex[1200] = orig.cx12 * overrides.capexMult;
+    M.capex[1700] = orig.cx17 * overrides.capexMult;
+  }
+  const r = computeModel(cap, price, horizon, sez);
+  // Restore
+  M.WACC = orig.WACC; M.INFL = orig.INFL;
+  M.varM2 = orig.varM2; M.fixBase = orig.fixBase;
+  M.capex[1200] = orig.cx12; M.capex[1700] = orig.cx17;
+  return r;
+}
+
+function buildTornadoData() {
+  const base = computeModel(S.cap, S.price, S.horizon, S.sez).npv / 1e6;
+  const drivers = [
+    {name:'Цена ±20%',     low: computeWithOverrides({price: S.price*0.8}).npv/1e6,
+                          high: computeWithOverrides({price: S.price*1.2}).npv/1e6},
+    {name:'OPEX ±20%',     low: computeWithOverrides({opexMult: 1.2}).npv/1e6,
+                          high: computeWithOverrides({opexMult: 0.8}).npv/1e6},
+    {name:'CAPEX ±20%',    low: computeWithOverrides({capexMult: 1.2}).npv/1e6,
+                          high: computeWithOverrides({capexMult: 0.8}).npv/1e6},
+    {name:'WACC ±200bps',  low: computeWithOverrides({wacc: M.WACC + 0.02}).npv/1e6,
+                          high: computeWithOverrides({wacc: M.WACC - 0.02}).npv/1e6},
+    {name:'СЭЗ (0%↔20%)', low: computeWithOverrides({sez: false}).npv/1e6,
+                          high: computeWithOverrides({sez: true}).npv/1e6},
+    {name:'Инфляция ±2pp', low: computeWithOverrides({infl: Math.max(0, M.INFL - 0.02)}).npv/1e6,
+                          high: computeWithOverrides({infl: M.INFL + 0.02}).npv/1e6},
+  ];
+  // Normalize low<high
+  drivers.forEach(d => { if (d.low > d.high) { const t=d.low; d.low=d.high; d.high=t; } });
+  // Sort by swing desc
+  drivers.sort((a,b)=>(b.high-b.low)-(a.high-a.low));
+  return {base, drivers};
+}
+
+function buildTornadoConfig(td) {
+  return {
+    type:'bar',
+    data:{
+      labels: td.drivers.map(d=>d.name),
+      datasets:[{
+        label:'NPV swing',
+        data: td.drivers.map(d=>[d.low, d.high]),
+        backgroundColor: td.drivers.map(d=>{
+          const lowDist = Math.abs(td.base - d.low);
+          const highDist = Math.abs(d.high - td.base);
+          return highDist > lowDist ? 'rgba(16,185,129,.65)' : 'rgba(244,63,94,.65)';
+        }),
+        borderColor: td.drivers.map(d=>{
+          const lowDist = Math.abs(td.base - d.low);
+          const highDist = Math.abs(d.high - td.base);
+          return highDist > lowDist ? '#10b981' : '#f43f5e';
+        }),
+        borderWidth:1, borderRadius:3,
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:600, easing:'easeOutCubic'},
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{
+          backgroundColor:COLORS.tooltipBg, borderColor:COLORS.tooltipBorder, borderWidth:1,
+          bodyFont:CHART_FONT, padding:10,
+          callbacks:{
+            label:c=>{
+              const d = td.drivers[c.dataIndex];
+              return ['Low:  $'+d.low.toFixed(1)+'M', 'High: $'+d.high.toFixed(1)+'M',
+                      'Swing: $'+(d.high-d.low).toFixed(1)+'M'];
+            }
+          }
+        },
+        annotation:{
+          annotations:{
+            base:{type:'line', xMin:td.base, xMax:td.base,
+              borderColor:'#f59e0b', borderWidth:2,
+              label:{display:true, content:'Base NPV $'+td.base.toFixed(1)+'M', position:'start',
+                backgroundColor:'rgba(245,158,11,.2)', color:'#f59e0b',
+                font:{family:'IBM Plex Mono',size:10,weight:600}, padding:5, borderRadius:3, yAdjust:-145}}
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:COLORS.axis,font:CHART_FONT,callback:v=>'$'+v+'M'},grid:{color:COLORS.grid}},
+        y:{ticks:{color:'#e2e8f0',font:{family:'Inter',size:11}},grid:{display:false}}
+      }
+    }
   };
 }
 
 function updateCharts(m) {
-  const pd = buildPLData(m);
-  plChart.data.labels = pd.labels;
-  plChart.data.datasets.forEach((ds,i)=>{
-    ds.data = pd.datasets[i].data;
-    ds.backgroundColor = pd.datasets[i].backgroundColor;
-    if (Array.isArray(pd.datasets[i].borderColor)) ds.borderColor = pd.datasets[i].borderColor;
-  });
-  plChart.update('none');
+  const revs = m.rows.map(r=>r.rev/1e6);
+  const ebis = m.rows.map(r=>r.ebitda/1e6);
+  const nis  = m.rows.map(r=>r.ni/1e6);
+  const lastIdx = m.rows.length - 1;
 
-  const fd = buildFCFData(m);
-  fcfChart.data.labels = fd.labels;
-  fcfChart.data.datasets.forEach((ds,i)=>{ds.data = fd.datasets[i].data});
-  fcfChart.update('none');
+  updateSm(smRevChart, revs);
+  updateSm(smEbiChart, ebis);
+  updateSm(smNiChart,  nis);
 
-  const dd = buildDonutData(m);
-  donutChart.data.datasets[0].data = dd.datasets[0].data;
-  donutChart.update('none');
+  document.getElementById('sm-rev-val').textContent = '$'+revs[lastIdx].toFixed(1)+'M';
+  document.getElementById('sm-ebi-val').textContent = '$'+ebis[lastIdx].toFixed(1)+'M';
+  document.getElementById('sm-ni-val').textContent  = '$'+nis[lastIdx].toFixed(1)+'M';
+  document.getElementById('sm-rev-cagr').textContent = cagrLabel(revs);
+  document.getElementById('sm-ebi-cagr').textContent = cagrLabel(ebis);
+  document.getElementById('sm-ni-cagr').textContent  = cagrLabel(nis);
+
+  // FCF — ECharts (full re-render to refresh visualMap range)
+  fcfEChart.setOption(buildFCFOption(m), {notMerge: true});
+
+  // OPEX — replace data
+  const opexCfg = buildOPEXConfig(m);
+  opexChart.data = opexCfg.data;
+  opexChart.update('none');
 }
 
-// ============================================================
-//  SENSITIVITY TABLE
-// ============================================================
-function updateSensTable(m) {
-  const H = S.horizon;
-  document.getElementById('sens-hd-rev').textContent = 'Выручка Г' + H;
-  document.getElementById('sens-hd-ni').textContent  = 'Чист. приб Г' + H;
-  const tbody = document.getElementById('sens-body');
-  tbody.innerHTML = '';
-
-  M.PRICES.forEach(p => {
-    const mm   = computeModel(S.cap, p, H, S.sez);
-    const yr1  = mm.rows[0];
-    const yrH  = mm.rows[H - 1];
-    const isActive = p === S.price;
-
-    let npvCls = 'npv-f';
-    if (mm.npv > 30e6) npvCls = 'npv-a';
-    else if (mm.npv > 0) npvCls = 'npv-b';
-    else if (mm.npv > -5e6) npvCls = 'npv-z';
-    else if (mm.npv > -30e6) npvCls = 'npv-d';
-
-    const tr = document.createElement('tr');
-    if (isActive) tr.className = 's-active';
-
-    const ni1Pos = yr1.ni >= 0 ? 'color:#10b981' : 'color:#f43f5e';
-    const niHPos = yrH.ni >= 0 ? 'color:#10b981' : 'color:#f43f5e';
-    const irrStr = mm.irr ? (mm.irr * 100).toFixed(1) + '%' : '<14%';
-
-    tr.innerHTML = `
-      <td>$${p}/м²</td>
-      <td>$${f1(yr1.rev)}M</td>
-      <td style="${ni1Pos}">$${f1(yr1.ni)}M</td>
-      <td>$${f1(yrH.rev)}M</td>
-      <td style="${niHPos}">$${f1(yrH.ni)}M</td>
-      <td class="${npvCls}">$${f1(mm.npv)}M</td>
-      <td class="${npvCls}">${irrStr}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+function updateTornado() {
+  if (!tornadoChart) return;
+  const td = buildTornadoData();
+  const cfg = buildTornadoConfig(td);
+  tornadoChart.data = cfg.data;
+  tornadoChart.options = cfg.options;
+  tornadoChart.update('none');
 }
 
 // ============================================================
@@ -1484,6 +1669,11 @@ function toggleSEZ() {
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
   update();
+});
+
+// Resize ECharts instances on window resize
+window.addEventListener('resize', () => {
+  if (fcfEChart) fcfEChart.resize();
 });
 </script>
 
